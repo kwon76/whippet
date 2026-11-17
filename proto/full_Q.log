@@ -1,0 +1,23 @@
+instance whip_gh30_A_483_full: m = 330977 ring elements, beta = 2^16.640, 6 levels, model 39.21 KB
+witness: uniform coefficients in [-37, 37], ||w|| / beta = 0.9756
+level 1 (commit): m=330977 r=90 n=3678  ||w||/beta = 0.9756
+  prover level 1 done in 365.3s
+level 2 (commit): m=15422 r=19 n=812  ||w||/beta = 0.9950
+  prover level 2 done in 20.0s
+level 3 (commit): m=3135 r=10 n=314  ||w||/beta = 0.9942
+  prover level 3 done in 3.3s
+level 4 (clear): m=1530 r=5 n=306  ||w||/beta = 0.9967
+  prover level 4 done in 1.2s
+level 5 (clear): m=1065 r=5 n=213  ||w||/beta = 1.0041
+  prover level 5 done in 0.9s
+level 6 (last): m=428 r=4 n=107  ||w||/beta = 0.9949
+  prover level 6 done in 0.5s
+proof: 39781 bytes; prover 393 s
+  verifier level 1 done in 163.8s
+  verifier level 2 done in 13.8s
+  verifier level 3 done in 2.0s
+  verifier level 4 done in 0.7s
+  verifier level 5 done in 0.5s
+  verifier level 6 done in 0.4s
+verified: True; verifier 183 s
+{"key": "whip_gh30_A_483_full", "m": 330977, "logbeta": 16.640084486318827, "fill": 0.9755951753122775, "half": 37, "levels": 6, "ok": true, "tampered_rejected": true, "size": 39781, "sizes": {"outer": 8776, "nonce": 12, "jl": 2952, "lift": 288, "sumcheck": 1760, "evals": 3584, "inner": 10753, "z": 11656}, "model": {"outer": 8768.000204315329, "jl": 2941.0677757819885, "lift": 288.0, "sumcheck": 1760.0, "chal": 384.0, "evals": 3584.0, "inner": 10752.000704440603, "z": 11672.737268248025}, "model_total": 40149.805952785944, "seeds": 384, "tp": 393.0534417629242, "tv": 182.6272759437561, "witness": "uniform", "stats": [{"level": 1, "kind": "commit", "m": 330977, "fill": 0.9755951753122775, "jl_tries": 1, "p_ratio": 0.9950837019029661, "z_ratio": 0.9766840148189592, "c_tries": 1}, {"level": 2, "kind": "commit", "m": 15422, "fill": 0.9949537635799212, "jl_tries": 1, "p_ratio": 0.9037953275998861, "z_ratio": 0.9885913497582757, "c_tries": 1}, {"level": 3, "kind": "commit", "m": 3135, "fill": 0.9941613402910138, "jl_tries": 1, "p_ratio": 0.9410072362354561, "z_ratio": 0.9930627571876329, "c_tries": 1}, {"level": 4, "kind": "clear", "m": 1530, "fill": 0.9967444875277801, "jl_tries": 1, "p_ratio": 0.9737564165528573, "z_ratio": 1.0020323352348321, "c_tries": 1}, {"level": 5, "kind": "clear", "m": 1065, "fill": 1.0041375434952418, "jl_tries": 2, "p_ratio": 0.9599881318107214, "z_ratio": 0.9938893567967074, "c_tries": 1}, {"level": 6, "kind": "last", "m": 428, "fill": 0.9948807185600008, "jl_tries": 3, "p_ratio": 0.9904963197881002, "z_ratio": 0.9841468217897904, "c_tries": 6}]}
