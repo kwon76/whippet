@@ -335,11 +335,14 @@ with open(os.path.join(OUT, "tab_e2e.tex"), "w") as fh:
                     ncell, VNAME[var], r['ok'], r['runs'], comma(r['model_total']), comma(r['model_ff']),
                     "/".join(comma(x) for x in r['com_bytes']), comma(r['model_com'])))
                 continue
-            dev = "$%+.2f$ to $%+.2f$" % (r['dev_min'], r['dev_max'])
+            dev = ("$%+.2f$ to $%+.2f$" % (r['dev_min'], r['dev_max'])
+                   if "%.2f" % r['dev_min'] != "%.2f" % r['dev_max'] else "$%+.2f$" % r['dev_min'])
             ff = "/".join(comma(x) for x in r['ff_bytes'])
             com = "/".join(comma(x) for x in r['com_bytes'])
-            fh.write("%s & %s & %d of %d & $%s$--$%s$ & $%s$ & %s & $%s$ & $%s$ & $%s$ & $%s$\\\\\n" % (
-                ncell, VNAME[var], r['ok'], r['runs'], comma(r['bytes_min']), comma(r['bytes_max']),
+            byt = ("$%s$--$%s$" % (comma(r['bytes_min']), comma(r['bytes_max'])) if r['bytes_min'] != r['bytes_max']
+                   else "$%s$" % comma(r['bytes_min']))
+            fh.write("%s & %s & %d of %d & %s & $%s$ & %s & $%s$ & $%s$ & $%s$ & $%s$\\\\\n" % (
+                ncell, VNAME[var], r['ok'], r['runs'], byt,
                 comma(r['model_total']), dev, ff, comma(r['model_ff']), com, comma(r['model_com'])))
 optk = [(n, "full") for n in ESIZES if (n, "full") in ESUM]
 gck = [(n, "gc") for n in ESIZES if (n, "gc") in ESUM]
