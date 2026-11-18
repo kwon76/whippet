@@ -266,6 +266,65 @@
     "--workers",
     "2"
    ]
+  },
+  {
+   "git": "3ec2f9a0365cd6a8f4f3933a7ae37e38affa45d7",
+   "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+   "cores": 4,
+   "mem_gb": 15.710601806640625,
+   "python": "3.13.18",
+   "numpy": "2.5.3",
+   "blas_threads": "1",
+   "date": "2026-11-18 05:26",
+   "argv": [
+    "neg",
+    "22",
+    "full,gc",
+    "--flips",
+    "60",
+    "--workers",
+    "2"
+   ]
+  },
+  {
+   "git": "3ec2f9a0365cd6a8f4f3933a7ae37e38affa45d7",
+   "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+   "cores": 4,
+   "mem_gb": 15.710601806640625,
+   "python": "3.13.18",
+   "numpy": "2.5.3",
+   "blas_threads": "1",
+   "date": "2026-11-18 05:32",
+   "argv": [
+    "neg",
+    "24",
+    "full,gc",
+    "--flips",
+    "60",
+    "--workers",
+    "2"
+   ]
+  },
+  {
+   "git": "3ec2f9a0365cd6a8f4f3933a7ae37e38affa45d7",
+   "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+   "cores": 4,
+   "mem_gb": 15.710601806640625,
+   "python": "3.13.18",
+   "numpy": "2.5.3",
+   "blas_threads": "2",
+   "date": "2026-11-18 05:43",
+   "argv": [
+    "runs",
+    "28",
+    "full,gc",
+    "uniform",
+    "2",
+    "--workers",
+    "1",
+    "--threads",
+    "2"
+   ]
   }
  ],
  "params": {
@@ -473,7 +532,7 @@
    "model_commitment": 1232.0000385241046,
    "model_kb": 37.52471547402425,
    "bs2": null,
-   "gbar2": 53424837973.33333,
+   "gbar2": 53424837973.33334,
    "extremal": [
     [
      2004318072,
@@ -545,7 +604,7 @@
    "model_commitment": 1232.0000385241046,
    "model_kb": 38.8458249138021,
    "bs2": null,
-   "gbar2": 208807439018.66666,
+   "gbar2": 208807439018.66672,
    "extremal": [
     [
      2004318072,
@@ -662,6 +721,42 @@
     [
      -2139228192,
      20225
+    ]
+   ]
+  },
+  "28_full": {
+   "key": "whip_gh28_A_483_full",
+   "N": 268435456,
+   "m": 6312,
+   "r": 665,
+   "b0": 32,
+   "d0": 6,
+   "b": 64,
+   "n": 23,
+   "n1": 9,
+   "Dt": 9,
+   "Du": 12,
+   "kt": 4,
+   "kw": 5,
+   "W0": 140313,
+   "beta1": 111938.14477647914,
+   "qmax": null,
+   "levels": 5,
+   "model_total": 40527.74986491299,
+   "model_first_fold": 1452.000198123825,
+   "model_tail": 39075.74966678917,
+   "model_commitment": 1440.000198123825,
+   "model_kb": 39.921630727454094,
+   "bs2": null,
+   "gbar2": 35697702775466.67,
+   "extremal": [
+    [
+     2130165232,
+     5376
+    ],
+    [
+     -2131247632,
+     5249
     ]
    ]
   }
@@ -124427,6 +124522,191 @@
      "1": true,
      "4294967196": true
     }
+   }
+  ],
+  "20_gc": [
+   {
+    "logN": 20,
+    "var": "gc",
+    "part": 1,
+    "honest": true,
+    "flips": 30,
+    "flips_rejected": 30,
+    "flips_in_first_fold": 5,
+    "flips_in_first_fold_rejected": 5
+   },
+   {
+    "logN": 20,
+    "var": "gc",
+    "part": 0,
+    "honest": true,
+    "flips": 30,
+    "flips_rejected": 30,
+    "flips_in_first_fold": 5,
+    "flips_in_first_fold_rejected": 5,
+    "wrong_y": true,
+    "noncanonical_y": true,
+    "wrong_x": true,
+    "other_commitment": true,
+    "flipped_commitment": true,
+    "proof_for_other_point": true,
+    "other_point_with_its_value": true,
+    "truncated": true,
+    "appended": true,
+    "empty": true,
+    "edge_points_ok": {
+     "0": true,
+     "1": true,
+     "4294967196": true
+    }
+   }
+  ],
+  "22_full": [
+   {
+    "logN": 22,
+    "var": "full",
+    "part": 1,
+    "honest": true,
+    "flips": 30,
+    "flips_rejected": 30,
+    "flips_in_first_fold": 5,
+    "flips_in_first_fold_rejected": 5
+   },
+   {
+    "logN": 22,
+    "var": "full",
+    "part": 0,
+    "honest": true,
+    "flips": 30,
+    "flips_rejected": 30,
+    "flips_in_first_fold": 5,
+    "flips_in_first_fold_rejected": 5,
+    "wrong_y": true,
+    "noncanonical_y": true,
+    "wrong_x": true,
+    "other_commitment": true,
+    "flipped_commitment": true,
+    "proof_for_other_point": true,
+    "other_point_with_its_value": true,
+    "truncated": true,
+    "appended": true,
+    "empty": true,
+    "edge_points_ok": {
+     "0": true,
+     "1": true,
+     "4294967196": true
+    }
+   }
+  ],
+  "22_gc": [
+   {
+    "logN": 22,
+    "var": "gc",
+    "part": 1,
+    "honest": true,
+    "flips": 30,
+    "flips_rejected": 30,
+    "flips_in_first_fold": 5,
+    "flips_in_first_fold_rejected": 5
+   },
+   {
+    "logN": 22,
+    "var": "gc",
+    "part": 0,
+    "honest": true,
+    "flips": 30,
+    "flips_rejected": 30,
+    "flips_in_first_fold": 5,
+    "flips_in_first_fold_rejected": 5,
+    "wrong_y": true,
+    "noncanonical_y": true,
+    "wrong_x": true,
+    "other_commitment": true,
+    "flipped_commitment": true,
+    "proof_for_other_point": true,
+    "other_point_with_its_value": true,
+    "truncated": true,
+    "appended": true,
+    "empty": true,
+    "edge_points_ok": {
+     "0": true,
+     "1": true,
+     "4294967196": true
+    }
+   }
+  ],
+  "24_full": [
+   {
+    "logN": 24,
+    "var": "full",
+    "part": 1,
+    "honest": true,
+    "flips": 30,
+    "flips_rejected": 30,
+    "flips_in_first_fold": 5,
+    "flips_in_first_fold_rejected": 5
+   },
+   {
+    "logN": 24,
+    "var": "full",
+    "part": 0,
+    "honest": true,
+    "flips": 30,
+    "flips_rejected": 30,
+    "flips_in_first_fold": 5,
+    "flips_in_first_fold_rejected": 5,
+    "wrong_y": true,
+    "noncanonical_y": true,
+    "wrong_x": true,
+    "other_commitment": true,
+    "flipped_commitment": true,
+    "proof_for_other_point": true,
+    "other_point_with_its_value": true,
+    "truncated": true,
+    "appended": true,
+    "empty": true,
+    "edge_points_ok": {
+     "0": true,
+     "1": true,
+     "4294967196": true
+    }
+   }
+  ],
+  "24_gc": [
+   {
+    "logN": 24,
+    "var": "gc",
+    "part": 0,
+    "honest": true,
+    "flips": 30,
+    "flips_rejected": 30,
+    "flips_in_first_fold": 5,
+    "flips_in_first_fold_rejected": 5,
+    "wrong_y": true,
+    "noncanonical_y": true,
+    "wrong_x": true,
+    "other_commitment": true,
+    "flipped_commitment": true,
+    "proof_for_other_point": true,
+    "other_point_with_its_value": true,
+    "truncated": true,
+    "appended": true,
+    "empty": true,
+    "edge_points_ok": {
+     "0": true,
+     "1": true,
+     "4294967196": true
+    }
+   },
+   {
+    "logN": 24,
+    "var": "gc",
+    "part": 1,
+    "honest": true,
+    "flips": 30,
+    "flips_rejected": 30,
+    "flips_in_first_fold": 5,
+    "flips_in_first_fold_rejected": 5
    }
   ]
  },
