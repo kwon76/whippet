@@ -24,7 +24,14 @@ def first_fold(logN, rounded, n=18, n1=7, TG=64, eta=0.10):
     m, r, lb0, d0, lb, dl = SHAPE[logN]
     D, LQ = P.D, P.LOGQ
     b0, b = 2.0**lb0, 2.0**lb
-    vz = b0*b0/12*r*TG
+    # mean square of a digit of a uniform coefficient in (-q/2, q/2]: the lower d0-1 digits are centred remainders
+    # (b0^2/12), the last digit is the remaining quotient, about uniform in [-T, T] with T = (q/2)/b0^(d0-1)
+    # (T^2/3).  The two agree if b0^d0 = 2^32 (N = 2^18 ... 2^24, 2^30); for the shapes of [NS24, Table 4] with
+    # N = 2^26, 2^28 b0^d0 = 2^30 and the last digit is four times wider.  (Before 2026-11-18 every digit was
+    # counted with b0^2/12, which underestimated ||s|| for N = 2^26 and 2^28; found by the end-to-end runs.)
+    top = 2.0**(LQ - 1)/b0**(d0 - 1)
+    sdig2 = ((d0 - 1)*b0*b0/12 + top*top/3)/d0
+    vz = sdig2*r*TG
 
     def widths(bits, table_rule):
         if table_rule:
@@ -43,7 +50,7 @@ def first_fold(logN, rounded, n=18, n1=7, TG=64, eta=0.10):
     Dt = Du = 0
     if rounded:
         cap = lambda x: max(0, min(20, floor(0.5*log2(max(1.0, x)))))
-        Dt = min(cap(0.1*b0*b0*d0*m*P.LOWDIV/(12*n)), cap(eta*ref*P.LOWDIV*b*b/(n*D*TG*r)))
+        Dt = min(cap(0.1*sdig2*d0*m*P.LOWDIV/n), cap(eta*ref*P.LOWDIV*b*b/(n*D*TG*r)))
         w_t = widths(LQ - Dt, False)
         freed = (wc(w_full) - wc(w_t))*n*r*D
         Du = min(1 + cap(freed/(n1*D)) if freed > n1*D else 0, cap(eta*ref*P.LOWDIV/(2*n1*D)))

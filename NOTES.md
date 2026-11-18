@@ -149,3 +149,20 @@ Results as they come in (details in proto/e2e.json, summary: python3 proto/e2e_s
   long; it was therefore not run.
 - ring.ternary: same values through a byte table (Generator.integers(0,4,int8) on PCG64 = top two bits of the raw
   bytes); checked in fastring.test, about 1.2x faster projections.
+
+## Discrepancy found by the end-to-end runs: digit norm in the first-fold model (2026-11-18)
+- Observation: N = 2^26, optimised setting, *uniform* polynomial: ||w1||/beta1 = 1.151, projection of level 1 rejected
+  251 times.  Measured ||s||^2 (digits of f) = 4.00 x the model value; at 2^24 1.01 x.
+- Cause: gh.first_fold counted every base-b0 digit of a coefficient with mean square b0^2/12.  The last digit is the
+  remaining quotient.  For the shapes of [NS24, Table 4] with N = 2^26 (b0 = 64, d0 = 5) and 2^28 (b0 = 32, d0 = 6)
+  b0^d0 = 2^30 < q, so the last digit lies in about [-T, T], T = (q/2)/b0^(d0-1) = 128 resp. 64, mean square T^2/3:
+  per coefficient 6827 instead of 1707 (2^26), 1792 instead of 512 (2^28).  For b0 = 16, d0 = 8 (2^18..2^24, 2^30)
+  the two agree.  The paper already says (Section 6.6, Cost) that these shapes have a last digit of 7-8 bits; the
+  guaranteed model (first_fold_gc) counted it correctly; the optimised/conventional model did not.
+- Which side is right: the implementation (it measures the digits); the model underestimated beta_1 and hence the
+  ranks and sizes for N = 2^26, 2^28 in the conventional and proof-based settings, for this work and for the
+  baselines alike (all use gh.instance).  N = 2^30 (all numbers of the abstract) and the guaranteed setting are not
+  affected.
+- Fix: gh.first_fold uses the mean square ((d0-1) b0^2/12 + T^2/3)/d0 (also in the rule for Dt).  Recomputed the 30
+  affected entries of final.json (gh26/gh28, not gc) with run_final.py; old values in results_prev/final.json.
+  The two pre-fix e2e runs are kept in e2e.json['model_bug'].
