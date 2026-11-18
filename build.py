@@ -319,19 +319,27 @@ num["EeNmin"] = pw(ESIZES[0])
 num["EeRuns"] = comma(sum(r['runs'] for r in ESUM.values()))
 num["EeOk"] = comma(sum(r['ok'] for r in ESUM.values()))
 num["EeKinds"] = str(len(ES.KINDS))
-num["EeNegSizes"] = ", ".join("$%s$" % pw(n) for n in sorted({int(k.split('_')[0]) for k in ENEG}))
+num["EeNegSizes"] = ",".join(pw(n) for n in sorted({int(k.split('_')[0]) for k in ENEG}))      # math mode
 num["EeFlips"] = str(max(v['flips'] for v in ENEG.values()))
 with open(os.path.join(OUT, "tab_e2e.tex"), "w") as fh:
     for n in ESIZES:
+        first = True
         for var in ("full", "P", "gc"):
             if (n, var) not in ESUM:
                 continue
             r = ESUM[(n, var)]
-            dev = "$%+.2f$ to $%+.2f$" % (r['dev_min'], r['dev_max']) if r['ok'] else "--"
-            ff = "/".join(comma(x) for x in r['ff_bytes'][:1] + r['ff_bytes'][-1:]) if len(r['ff_bytes']) > 1 else comma(r['ff_bytes'][0])
-            com = comma(r['com_bytes'][0]) if len(r['com_bytes']) == 1 else "--"
-            fh.write("$%s$ & %s & %d of %d & $%s$--$%s$ & $%s$ & %s & $%s$ & $%s$ & $%s$ & $%s$\\\\\n" % (
-                pw(n) if var == "full" else "", VNAME[var], r['ok'], r['runs'], comma(r['bytes_min']), comma(r['bytes_max']),
+            ncell = "$%s$" % pw(n) if first else ""
+            first = False
+            if not r['ok']:
+                fh.write("%s & %s & %d of %d & -- & $%s$ & -- & -- & $%s$ & $%s$ & $%s$\\\\\n" % (
+                    ncell, VNAME[var], r['ok'], r['runs'], comma(r['model_total']), comma(r['model_ff']),
+                    "/".join(comma(x) for x in r['com_bytes']), comma(r['model_com'])))
+                continue
+            dev = "$%+.2f$ to $%+.2f$" % (r['dev_min'], r['dev_max'])
+            ff = "/".join(comma(x) for x in r['ff_bytes'])
+            com = "/".join(comma(x) for x in r['com_bytes'])
+            fh.write("%s & %s & %d of %d & $%s$--$%s$ & $%s$ & %s & $%s$ & $%s$ & $%s$ & $%s$\\\\\n" % (
+                ncell, VNAME[var], r['ok'], r['runs'], comma(r['bytes_min']), comma(r['bytes_max']),
                 comma(r['model_total']), dev, ff, comma(r['model_ff']), com, comma(r['model_com'])))
 optk = [(n, "full") for n in ESIZES if (n, "full") in ESUM]
 gck = [(n, "gc") for n in ESIZES if (n, "gc") in ESUM]
@@ -344,36 +352,54 @@ ffd = [x - ESUM[k]['model_ff'] for k in optk + gck for x in ESUM[k]['ff_bytes']]
 num["EeFfDevMax"] = str(int(round(max(abs(x) for x in ffd))))
 cod = [x - ESUM[k]['model_com'] for k in optk + gck for x in ESUM[k]['com_bytes']]
 num["EeComDevMax"] = str(int(round(max(abs(x) for x in cod))))
-# kinds of polynomials, optimised and guaranteed setting, all sizes together
+# kinds of polynomials: proof-based setting per size (largest ||w1||/beta1, failures), guaranteed setting overall
+EKN = [n for n in ESIZES if (n, "full") in ESUM]
+num["EeKindCols"] = str(len(EKN))
+num["EeKindHead"] = " & ".join("$%s$" % pw(n) for n in EKN)
+KN = {"uniform": "uniform in $[0,q)$", "sparse": "$1\\%$ non-zero", "const": "all coefficients equal",
+      "period7": "period $7$", "blockrep": "all blocks $\\mathbf f_i$ equal", "small8": "$8$-bit coefficients",
+      "maxdig": "extremal digits", "maxdig_eq": "extremal digits, all equal"}
 with open(os.path.join(OUT, "tab_e2e_kinds.tex"), "w") as fh:
-    KN = {"uniform": "uniform in $[0,q)$", "sparse": "$1\\%$ non-zero", "const": "all coefficients equal",
-          "period7": "period $7$", "blockrep": "all blocks $\\mathbf f_i$ equal", "small8": "$8$-bit coefficients",
-          "maxdig": "extremal digits", "maxdig_eq": "extremal digits, all equal"}
+    nk = len(EKN)
+    fh.write("\\begin{tabular}{@{}l%srr@{}}\n\\toprule\n" % ("r" * nk))
+    fh.write(" & \\multicolumn{%d}{c}{proof-based, $\\norm{\\vw_1}/\\beta_1$} & \\multicolumn{2}{c}{guaranteed}\\\\\n" % nk)
+    fh.write("\\cmidrule(lr){2-%d}\\cmidrule(l){%d-%d}\n" % (nk + 1, nk + 2, nk + 3))
+    fh.write("polynomial & %s & $\\norm{\\vw_1}/B_1$ & proofs\\\\\n\\midrule\n" % " & ".join("$%s$" % pw(n) for n in EKN))
     for kind in ES.KINDS:
         cells = []
-        for var in ("full", "gc"):
-            ks = [ESUM[(n, var)]['kinds'][kind] for n in ESIZES if (n, var) in ESUM and kind in ESUM[(n, var)]['kinds']]
-            if not ks:
-                cells += ["--"] * 4
+        for n in EKN:
+            s_ = ESUM[(n, "full")]['kinds'].get(kind)
+            if not s_:
+                cells.append("")
                 continue
-            okn, rn = sum(s['ok'] for s in ks), sum(s['runs'] for s in ks)
-            am = [s['att_mean'] * s['ok'] for s in ks if s['att_mean']]
-            cells += ["%d of %d" % (okn, rn), "%.1f" % (sum(am) / max(1, okn)) if am else "--",
-                      str(max(s['att_max'] for s in ks if s['att_max'])) if am else "--",
-                      "%.3f--%.3f" % (min(s['fill1_min'] for s in ks), max(s['fill1_max'] for s in ks))]
+            c = "%.2f" % s_['fill1_max']
+            if s_['ok'] < s_['runs']:
+                c = "\\textbf{%s}$^{%d/%d}$" % (c, s_['runs'] - s_['ok'], s_['runs'])
+            cells.append(c)
+        gk = [ESUM[(n, "gc")]['kinds'][kind] for n in ESIZES if (n, "gc") in ESUM and kind in ESUM[(n, "gc")]['kinds']]
+        cells.append("%.2f" % max(x['fill1_max'] for x in gk) if gk else "")
+        cells.append("%d of %d" % (sum(x['ok'] for x in gk), sum(x['runs'] for x in gk)) if gk else "")
         fh.write("%s & %s\\\\\n" % (KN[kind], " & ".join(cells)))
-# times and memory, uniform polynomials
+    fh.write("\\bottomrule\n\\end{tabular}\n")
+# times and memory, uniform polynomials; from the runs on an otherwise idle machine where there are such runs
+TSUM = dict(ESUM)
+if EDB.get('timing'):
+    TSUM.update(ES.summary(dict(runs=EDB['timing'], params=EDB['params'])))
+cpu = [m for m in EDB['meta'] if m.get('cpu')][-1]
+num["EeMachine"] = "%s, %d cores, %.0f\\,GB" % (cpu['cpu'].replace("(R)", "").replace("(TM)", "").replace(" CPU", ""), cpu['cores'], cpu['mem_gb'])
+num["EeTimeNote"] = ("one BLAS thread per run for $N\\le2^{24}$, two for larger $N$; other runs used the remaining cores"
+                     if not EDB.get('timing') else "one run at a time on an otherwise idle machine")
 with open(os.path.join(OUT, "tab_e2e_time.tex"), "w") as fh:
     for n in ESIZES:
         for var in ("full", "gc"):
-            if (n, var) not in ESUM or ESUM[(n, var)]['t_commit'] is None:
+            if (n, var) not in TSUM or TSUM[(n, var)]['t_commit'] is None:
                 continue
-            r = ESUM[(n, var)]
-            fh.write("$%s$ & %s & %.1f & %.1f & %.1f & %s & %s\\\\\n" % (
-                pw(n) if var == "full" else "", VNAME[var], r['t_commit'], r['t_open'], r['t_verify'],
+            r = TSUM[(n, var)]
+            fh.write("%s & %s & %.1f & %.1f & %.1f & %s & %s\\\\\n" % (
+                "$%s$" % pw(n) if var == "full" else "", VNAME[var], r['t_commit'], r['t_open'], r['t_verify'],
                 comma(r['rss_prover']), comma(r['rss_verifier'])))
 # levels of the largest size with both settings
-nlv = max(n for n in ESIZES if (n, "full") in ESUM and (n, "gc") in ESUM)
+nlv = max(n for n in ESIZES if all((n, v) in ESUM and ESUM[(n, v)]["ok"] >= 10 for v in ("full", "gc")))
 num["EeNlv"] = pw(nlv)
 with open(os.path.join(OUT, "tab_e2e_levels.tex"), "w") as fh:
     rows = [("first fold", None)] + [("%d" % (i + 1), i) for i in range(max(len(ESUM[(nlv, v)]['level_stats']) for v in ("full", "gc")))]
@@ -406,6 +432,33 @@ num["EeOptFillLo"] = "%.3f" % min(s['fill1_min'] for k in optk for s in ESUM[k][
 num["EeOptAttMax"] = str(max(s['att_max'] for k in optk for s in ESUM[k]['kinds'].values() if s['att_max']))
 num["EeOptJlMax"] = str(max(s['jl_max'] for k in optk for s in ESUM[k]['kinds'].values()))
 num["EeOptCMax"] = str(max(s['c_max'] for k in optk for s in ESUM[k]['kinds'].values()))
+fails = [(n, kind, x) for (n, var), r in ESUM.items() if var == "full"
+         for kind, runs in ES.groups(EDB)[(n, var)].items() for x in runs if not x['ok']]
+num["EeOptFailSizes"] = ",".join(pw(n) for n in sorted({f[0] for f in fails})) or "none"      # math mode
+num["EeOptFailKinds"] = str(len({f[1] for f in fails}))
+if fails:
+    ff_fail = [f[2]['ff']['fill'] for f in fails]
+    num["EeFailFillLo"], num["EeFailFillHi"] = "%.2f" % min(ff_fail), "%.2f" % max(ff_fail)
+    assert all(f[2]['fail_level'] == 1 and f[2]['fail_what'] == 'projection' for f in fails)
+okfills = [x['ff']['fill'] for (n, var), r in ESUM.items() if var == "full"
+           for runs in ES.groups(EDB)[(n, var)].values() for x in runs if x['ok']]
+num["EeOkFillHi"] = "%.3f" % max(okfills)
+zes = [x['ff']['parts']['ze'] / x['ff']['model_parts']['ze'] for (n, var), r in ESUM.items() if var == "full"
+       for runs in ES.groups(EDB)[(n, var)].values() for x in runs if 'parts' in x.get('ff', {})]
+num["EeZeMax"] = "%.1f" % max(zes)
+# share of ||z1||^2 in beta_1^2 in the model of the first fold (optimised setting)
+sys.path.insert(0, os.path.join(ROOT, "model"))
+import gh as GH, params as PP, wmodel as WM                 # noqa: E402
+WM.set_bkz(483)
+zshare = {}
+for n in sorted(set(ESIZES) | {26, 28, 30}):
+    g = GH.instance(n, True, 'A')
+    m0, r0, lb0, d0, lb, _ = GH.SHAPE[n]
+    zshare[n] = (2.0 ** (2 * lb0) / 12 * r0 * PP.TAU) / 2.0 ** (2 * lb) * d0 * m0 * 64 / g['beta'] ** 2
+small = [zshare[n] for n in ESIZES if n <= 24]
+num["EeZshareSmallLo"], num["EeZshareSmallHi"] = "%d" % round(100 * min(small)), "%d" % round(100 * max(small))
+for n, tag in ((26, "Six"), (28, "Eight"), (30, "Thirty")):
+    num["EeZshare%s" % tag] = "%d" % round(100 * zshare[n])
 num["EeVerifyMax"] = "%.0f" % max(ESUM[k]['t_verify'] for k in optk + gck if ESUM[k]['t_verify'])
 num["EeCommitMax"] = "%.0f" % max(ESUM[k]['t_commit'] for k in optk + gck if ESUM[k]['t_commit'])
 
@@ -432,7 +485,7 @@ body = body.replace("%%NUMBERS%%", open(os.path.join(OUT, "numbers.tex")).read()
 for name in order:
     body += "\n" + open(os.path.join(TEX, name + ".tex")).read()
 appendix = open(os.path.join(TEX, "91_appendix.tex")).read()
-inline = lambda txt: re.sub(r"\\input\{gen/([a-z_]+)\.tex\}",
+inline = lambda txt: re.sub(r"\\input\{gen/([a-z0-9_]+)\.tex\}",
                             lambda mo: open(os.path.join(OUT, mo.group(1) + ".tex")).read().rstrip("\n"), txt)
 text = inline(body + appendix)
 used = set(re.findall(r"\\n([A-Z][A-Za-z]*)", text))

@@ -5,8 +5,38 @@ We implemented the non-interactive prover and verifier of the evaluation protoco
 \paragraph{Scope.}
 We ran the complete protocol, commitment, evaluation proof and verification, for polynomials with $N=\nEeSizes$ coefficients. For $N\le2^{24}$, which~\cite[Table~4]{NS24} does not cover, the shape has $b_0=16$, digits in base $2^6$ and $m/r\approx9.5$, as for $N=2^{30}$, and the schedule of the tail is computed by the same model as for the other sizes. For $N=2^{30}$ we ran only the recursion, on synthetic witnesses with the length and the norm bound of the relation~\eqref{eq:gh-system}. The code is written for clarity, and its running times (\cref{app:e2e}) describe this implementation only; they say nothing about the verification time that an optimised implementation of the scheme would achieve.
 
-\paragraph{Sizes.}
-\Cref{tab:impl} compares the proofs written by the implementation with the model. In the conventional and proof-based settings the witness has independent uniform coefficients and norm \nFullFill$\,\beta$, and the measured sizes are within \nFullDev\% of the model; the differences are nonces, length fields and the termination of the coder. In the guaranteed setting the model gives an upper bound: the witness of the first level has norm \nFullGFill$\,B$, but the witnesses of the later levels are well below their guaranteed bounds, so that $\vz$ and the projections are coded with fewer bits, and the proof has $\nFullGBytes$ bytes where the bound is $\nFullGModel$.
+\paragraph{End-to-end runs.}
+\Cref{tab:e2e} summarises \nEeRuns{} runs of the complete protocol, each with a new polynomial and a random evaluation point, for the eight kinds of polynomials of \cref{tab:e2e-kinds}; for $N\le2^{22}$ there are $20$ runs per kind and setting. Every proof that the prover produced was accepted, and in every run $y$ agreed with a direct evaluation of the polynomial. In the proof-based setting the proofs differ from the model by at most \nEeDevAbs\%, the messages of the first fold by \nEeFfDevMax{} bytes and the commitment by \nEeComDevMax{} byte; the differences are the nonces and the rounding of the fixed-radix packing. In the guaranteed setting the proofs are \nEeGcBelowLo\% to \nEeGcBelowHi\% shorter than the bound, because the witnesses stay well below their bounds: the witness handed to the tail had at most \nEeGcFfFillMax{} times its bound, and no proof needed more than \nEeGcAttMax{} attempts in total, counting the challenges of the first fold and the projections and challenges of all levels. For $N=\nEeNegSizes$ and both settings the verifier rejected the following: each of \nEeFlips{} proofs with a single flipped bit, about a sixth of them in the messages of the first fold; a truncated proof, a proof with an appended byte and the empty proof; the claim $(x,y+1)$, the non-canonical claim $(x,y+q)$ and the claim $(x+1,y)$; the commitment to another polynomial and the commitment with a flipped bit; and the proof for another point. Proofs at $x=0$, $1$ and $q-1$ were accepted.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{@{}llrrrrrrrr@{}}
+\toprule
+ & & & \multicolumn{3}{c}{proof (bytes)} & \multicolumn{2}{c}{first fold} & \multicolumn{2}{c}{commitment}\\
+\cmidrule(lr){4-6}\cmidrule(lr){7-8}\cmidrule(l){9-10}
+$N$ & setting & proofs & measured & model & deviation (\%) & meas. & model & meas. & model\\
+\midrule
+\input{gen/tab_e2e.tex}
+\bottomrule
+\end{tabular}
+\caption{Complete runs of the evaluation protocol at block size $483$: number of proofs produced out of the number of runs, sizes of the proofs (without challenge seeds), of the messages of the first fold ($\mathbf v$, $\hat y$ without $\tau_0(\hat y)$ and the nonce) and of the commitment, measured and in the model. In the guaranteed setting the model gives an upper bound. The proofs that were not produced are discussed in the text.}
+\label{tab:e2e}
+\end{table}
+
+\paragraph{Structured polynomials.}
+For polynomials with independent uniform coefficients, the case that expected norms describe, the witness that the first fold hands to the tail had between \nEeOptUniFillLo{} and \nEeOptUniFillHi{} times the bound $\beta_1$ of the proof-based parameters. Structured polynomials behave differently. If many blocks $\mathbf f_i$ have the same digits, the amortised opening $\vz=\sum_ic_i\vs_i$ contains $(\sum_ic_i)\vs_1$, whose norm is not concentrated around its expectation, and over all runs $\norm{\vz}^2+\norm{\ve}^2$ reached \nEeZeMax{} times its expected value. Constant polynomials are of this kind, and so are polynomials whose coefficients all have extremal digits, even when the coefficients differ: the lower digits are then the same everywhere. How much this matters depends on the size. Only the high part $\vz^{(1)}$ of $\vz$ in base $b$ grows with $\vz$; its share of $\beta_1^2$ is \nEeZshareSmallLo\% to \nEeZshareSmallHi\% for $N\le2^{24}$, but \nEeZshareSix\%, \nEeZshareEight\% and \nEeZshareThirty\% for $N=2^{26},2^{28},2^{30}$, since the number $r$ of blocks grows and the base does not. \Cref{tab:e2e-kinds} shows the consequence. In the proof-based setting \nEeOptFails{} proofs were not produced, for $N=\nEeOptFailSizes$: the first fold handed \nEeFailFillLo{} to \nEeFailFillHi{} times $\beta_1$ to the tail, and the projection of the first level was rejected $251$ times. The largest first-fold witness for which a proof was found had \nEeOkFillHi{} times $\beta_1$, after up to \nEeOptJlMax{} projections in one level. With the guaranteed parameters every run succeeded. The optimised parameters are therefore not complete for all polynomials at the sizes for which we report them; the baselines are computed with the same rule for the bound $\beta_1$ of the first fold, so the same holds for them as far as our model of them goes.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{3.6pt}
+\input{gen/tab_e2e_kinds.tex}
+\caption{Largest norm of the witness $\vw_1$ that the first fold hands to the tail, relative to the bound $\beta_1$ (proof-based) or $B_1$ (guaranteed), over all runs of a kind of polynomial and a size. Bold entries with an exponent $k/n$: in $k$ of $n$ runs no proof was produced. Guaranteed: all sizes together.}
+\label{tab:e2e-kinds}
+\end{table}
+
+\paragraph{The tail at full size.}
+For $N=2^{30}$ we ran the tail on synthetic witnesses with the length and the norm bound of the relation~\eqref{eq:gh-system}, two random $R$-constraints and one random $\FF$-constraint. \Cref{tab:impl} compares the proofs with the model. In the conventional and proof-based settings the witness has independent uniform coefficients and norm \nFullFill$\,\beta$, and the measured sizes are within \nFullDev\% of the model; the differences are nonces, length fields and the termination of the coder. In the guaranteed setting the model gives an upper bound: the witness of the first level has norm \nFullGFill$\,B$, but the witnesses of the later levels are well below their guaranteed bounds, so that $\vz$ and the projections are coded with fewer bits, and the proof has $\nFullGBytes$ bytes where the bound is $\nFullGModel$.
 
 \begin{table}[t]
 \centering\small
@@ -20,7 +50,7 @@ bytes & meas. & model & meas. & model & meas. & model & meas. & bound\\
 \input{gen/tab_impl.tex}
 \bottomrule
 \end{tabular}
-\caption{Proofs of the linear tail for synthetic witnesses of the size that the first fold produces for $N=2^{30}$: bytes written by the reference implementation and bytes predicted by the model, without challenge seeds. The first fold would add the commitment $\mathbf v$ and $12$ bytes.}
+\caption{Proofs of the linear tail for synthetic witnesses of the size that the first fold produces for $N=2^{30}$: bytes written by the reference implementation and bytes predicted by the model, without challenge seeds. The first fold adds the messages counted in \cref{tab:e2e}.}
 \label{tab:impl}
 \end{table}
 

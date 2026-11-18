@@ -99,3 +99,40 @@ The witness of~\eqref{eq:gh-system} has $\delta_wr+\delta_tnr+2\delta_0m+2n_1+2n
 The following two challenges $c\in\Ch$ are such that the polynomial $c'$ obtained by exchanging the coefficients of $X^0$ and $X^1$ is also in $\Ch$; the differences are $c-c'=3(1-X)$ for the first and $4(1-X)$ for the second. Coefficients are listed from $X^0$ to $X^{63}$; the operator norms of $c$ and $c'$ are given after each list.
 
 \input{gen/tab_pairs.tex}
+
+\section{End-to-End Runs: Levels, Time and Memory}\label{app:e2e}
+
+\Cref{tab:e2e-levels} lists, for $N=\nEeNlv$ and all runs of \cref{tab:e2e} at that size in which a proof was produced, the norm of the witness of every level relative to its bound and the numbers of attempts. In the proof-based setting the first level carries the variation of the first-fold witness, and the terminal level repeats its challenges until $\vz$ and $\ve$ meet their bounds; in the guaranteed setting every witness stays near half of its bound and one attempt sufficed almost always.
+
+\begin{table}[h]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+ & \multicolumn{3}{c}{proof-based} & \multicolumn{3}{c}{guaranteed}\\
+\cmidrule(lr){2-4}\cmidrule(l){5-7}
+level & $\norm{\vw}/\beta$ & $\Pi$ & $c$ & $\norm{\vw}/B$ & $\Pi$ & $c$\\
+\midrule
+\input{gen/tab_e2e_levels.tex}
+\bottomrule
+\end{tabular}
+\caption{Runs of \cref{tab:e2e} for $N=\nEeNlv$: range of the norm of the witness of each level relative to its bound, and mean and maximum of the numbers of attempts for the projection ($\Pi$) and for the challenges ($c$); the row ``first fold'' gives the witness handed to the first level and the challenge vectors of the first fold.}
+\label{tab:e2e-levels}
+\end{table}
+
+\Cref{tab:e2e-time} gives running times and memory. They were measured on one machine (\nEeMachine), with the prover and the verifier in separate processes, and include neither the generation of the public matrices nor the evaluation of $f$ that checks $y$.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}llrrrrr@{}}
+\toprule
+ & & \multicolumn{3}{c}{time (s)} & \multicolumn{2}{c}{peak memory (MB)}\\
+\cmidrule(lr){3-5}\cmidrule(l){6-7}
+$N$ & setting & commit & open & verify & prover & verifier\\
+\midrule
+\input{gen/tab_e2e_time.tex}
+\bottomrule
+\end{tabular}
+\caption{Median running times of the reference implementation for uniform polynomials (\nEeTimeNote) and peak resident memory of the prover (commitment and opening) and of the verifier.}
+\label{tab:e2e-time}
+\end{table}
