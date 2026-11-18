@@ -451,6 +451,27 @@
     "--threads",
     "3"
    ]
+  },
+  {
+   "git": "967a1c75136f27e2e470634e8f8e20dd1f64cc4c",
+   "cpu": "Intel(R) Xeon(R) Processor @ 2.30GHz",
+   "cores": 4,
+   "mem_gb": 15.710601806640625,
+   "python": "3.13.18",
+   "numpy": "2.5.3",
+   "blas_threads": "3",
+   "date": "2026-11-18 06:58",
+   "argv": [
+    "runs",
+    "28",
+    "full",
+    "blockrep,period7,maxdig",
+    "1",
+    "--workers",
+    "1",
+    "--threads",
+    "3"
+   ]
   }
  ],
  "params": {
@@ -125444,6 +125465,53 @@
      "t_verify": 24.84993028640747,
      "rss_mb": 2031.19921875
     }
+   },
+   {
+    "logN": 28,
+    "var": "full",
+    "kind": "maxdig_eq",
+    "rep": 1,
+    "seed": 28055518,
+    "t_setup": 0.3584885597229004,
+    "rss_setup_mb": 745.30078125,
+    "x": 947067922,
+    "t_commit": 85.03501439094543,
+    "rss_commit_mb": 5745.90234375,
+    "commitment_bytes": 1441,
+    "t_open": 2319.819612264633,
+    "rss_open_mb": 5844.203125,
+    "ok": false,
+    "failed": "projection keeps failing; witness too long",
+    "fail_level": 1,
+    "fail_what": "projection",
+    "ff": {
+     "c_tries": 1,
+     "fill": 1.3854281540283018,
+     "z_norm2": 81951677767680.0,
+     "e_norm2": 1370672845443.0,
+     "s_norm2": 1443109011456.0,
+     "parts": {
+      "z": 20754239200.0,
+      "t_hat": 1096023411.0,
+      "w_hat": 132874048.0,
+      "e": 335131340.0,
+      "d": 1732238525.0,
+      "ze": 83322350613123.0
+     },
+     "model_parts": {
+      "z": 3211495103.9999995,
+      "t_hat": 1085904213.3333333,
+      "w_hat": 290542933.3333333,
+      "e": 371171669.3333334,
+      "d": 1610612736.0,
+      "ze": 35697702775466.67
+     },
+     "ze_tries": [
+      83322350613123.0
+     ],
+     "t_first_fold": 17.84995746612549
+    },
+    "stats": []
    }
   ],
   "28_gc_maxdig_eq": [
