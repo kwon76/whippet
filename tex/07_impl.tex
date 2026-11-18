@@ -55,7 +55,7 @@ bytes & meas. & model & meas. & model & meas. & model & meas. & bound\\
 \end{table}
 
 \paragraph{Attempts and norms.}
-\Cref{tab:stats} lists, for each level of three of these runs, the norm of the witness relative to its bound and the numbers of attempts. With the optimised parameters the witnesses of the later levels have norms between \nFillLo{} and \nFillHi{} times the bound predicted from expected norms, the projection needed up to \nJlMaxOpt{} attempts, and the challenges of the terminal level up to \nCMaxOpt. With the guaranteed parameters all witnesses are below their bounds, as they must be, by a wide margin for the random witness and also for the witness in which all coefficients are equal.
+\Cref{tab:stats} lists, for each level of three of these runs, the norm of the witness relative to its bound and the numbers of attempts. With the optimised parameters the witnesses of the later levels have norms between \nFillLo{} and \nFillHi{} times the bound predicted from expected norms, the projection needed up to \nJlMaxOpt{} attempts, and the challenges of the terminal level up to \nCMaxOpt. In \nRepRuns{} further runs in the proof-based setting at block size $483$, each with a new uniform witness, \nRepOk{} proofs were produced, with \nRepAttMean{} attempts per proof on average and at most \nRepAttMax{}; the projection of one level needed up to \nRepJlMax{} attempts, the challenges of the terminal level up to \nRepCMax{}, and the witnesses of the later levels had \nRepFillLo{} to \nRepFillHi{} times their bounds. With the guaranteed parameters all witnesses are below their bounds, as they must be, by a wide margin for the random witness and also for the witness in which all coefficients are equal.
 
 \begin{table}[t]
 \centering\small
