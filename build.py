@@ -265,6 +265,24 @@ num["JlMaxOpt"] = str(max(s["jl_tries"] for t in "CAQ" for s in FULL[t]["stats"]
 num["CMaxOpt"] = str(max(s["c_tries"] for t in "CAQ" for s in FULL[t]["stats"]))
 assert max(s["fill"] for t in ("G", "Gc") for s in FULL[t]["stats"]) <= 1.0
 
+# ---------------------------------------------------------------- implementation: repeated full-size runs (tail)
+REP = os.path.join(ROOT, "proto", "full_Q_rep.json")
+if os.path.exists(REP):
+    RQ = json.load(open(REP))
+    rr = RQ["runs"]
+    okr = [r for r in rr if r["ok"]]
+    num["RepRuns"], num["RepOk"] = str(len(rr)), str(len(okr))
+    attq = [sum(s["jl_tries"] for s in r["stats"]) + sum(s.get("c_tries", 0) for s in r["stats"]) for r in okr]
+    num["RepAttMean"], num["RepAttMax"] = "%.1f" % (sum(attq) / len(attq)), str(max(attq))
+    num["RepJlMax"] = str(max(s["jl_tries"] for r in okr for s in r["stats"]))
+    num["RepCMax"] = str(max(s.get("c_tries", 0) for r in okr for s in r["stats"]))
+    fl = [s["fill"] for r in okr for s in r["stats"][1:]]
+    num["RepFillLo"], num["RepFillHi"] = "%.3f" % min(fl), "%.3f" % max(fl)
+    sz = [r["size"] for r in okr]
+    num["RepSizeLo"], num["RepSizeHi"] = comma(min(sz)), comma(max(sz))
+else:
+    print("note: proto/full_Q_rep.json missing")
+
 # ---------------------------------------------------------------- implementation: repeated runs
 KIND = {"uniform": "random", "const": "all coefficients equal", "sparse": "one coefficient per ring element"}
 runs0 = RET["opt_uniform"]["runs"]
