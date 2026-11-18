@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Repeated full-scale runs of the tail (as run_full.py, uniform witnesses) with different seeds, for the
 distribution of the numbers of attempts of the honest prover.
-usage: run_full_rep.py <key in ../model/final.json> <output json> <runs>      (resumable)"""
+usage: run_full_rep.py <key in ../model/final.json> <output json> <runs> [first seed]      (resumable)"""
 import json, os, sys, time
 from math import sqrt, log2
 import numpy as np
@@ -10,6 +10,7 @@ import params as P, wmodel as W
 import tail as T, ring as R
 
 key, outp, runs = sys.argv[1], sys.argv[2], int(sys.argv[3])
+first = int(sys.argv[4]) if len(sys.argv) > 4 else 0
 ent = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "model", "final.json")))[key]
 W.set_bkz(int(key.split("_")[3]))
 sched = ent['trace']
@@ -20,7 +21,7 @@ except Exception:
     out = dict(key=key, m=m, logbeta=log2(beta), levels=len(sched), model_total=ent['tail'] * 1024,
                seeds=64 * len(sched), runs=[])
 done = {r['seed'] for r in out['runs']}
-for seed in range(runs):
+for seed in range(first, runs):
     if seed in done:
         continue
     rng = np.random.default_rng(3000 + seed)

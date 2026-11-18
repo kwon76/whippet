@@ -277,7 +277,11 @@ assert max(s["fill"] for t in ("G", "Gc") for s in FULL[t]["stats"]) <= 1.0
 REP = os.path.join(ROOT, "proto", "full_Q_rep.json")
 if os.path.exists(REP):
     RQ = json.load(open(REP))
-    rr = RQ["runs"]
+    rr = list(RQ["runs"])
+    REP2 = os.path.join(ROOT, "proto", "full_Q_rep2.json")          # second process with other seeds
+    if os.path.exists(REP2):
+        seen = {r["seed"] for r in rr}
+        rr += [r for r in json.load(open(REP2))["runs"] if r["seed"] not in seen]
     okr = [r for r in rr if r["ok"]]
     num["RepRuns"], num["RepOk"] = str(len(rr)), str(len(okr))
     attq = [sum(s["jl_tries"] for s in r["stats"]) + sum(s.get("c_tries", 0) for s in r["stats"]) for r in okr]
