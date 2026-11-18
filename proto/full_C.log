@@ -1,23 +1,23 @@
 instance whip_gh30_C_438_full: m = 304383 ring elements, beta = 2^16.544, 6 levels, model 29.88 KB
 witness: uniform coefficients in [-36, 36], ||w|| / beta = 0.9735
 level 1 (commit): m=304383 r=173 n=1760  ||w||/beta = 0.9735
-  prover level 1 done in 328.6s
+  prover level 1 done in 239.8s
 level 2 (commit): m=15501 r=24 n=646  ||w||/beta = 0.9911
-  prover level 2 done in 17.3s
+  prover level 2 done in 5.2s
 level 3 (commit): m=2794 r=9 n=311  ||w||/beta = 0.9984
-  prover level 3 done in 2.5s
+  prover level 3 done in 0.9s
 level 4 (commit): m=1295 r=6 n=216  ||w||/beta = 1.0008
-  prover level 4 done in 0.9s
+  prover level 4 done in 0.4s
 level 5 (clear): m=900 r=4 n=225  ||w||/beta = 1.0070
-  prover level 5 done in 0.6s
+  prover level 5 done in 0.2s
 level 6 (last): m=713 r=6 n=119  ||w||/beta = 0.9884
-  prover level 6 done in 0.4s
-proof: 30225 bytes; prover 352 s
-  verifier level 1 done in 142.4s
-  verifier level 2 done in 10.2s
-  verifier level 3 done in 1.4s
-  verifier level 4 done in 0.5s
-  verifier level 5 done in 0.4s
-  verifier level 6 done in 0.3s
-verified: True; verifier 157 s
-{"key": "whip_gh30_C_438_full", "m": 304383, "logbeta": 16.54356134682999, "fill": 0.9734693467251709, "half": 36, "levels": 6, "ok": true, "tampered_rejected": true, "size": 30225, "sizes": {"outer": 7929, "nonce": 12, "jl": 2794, "lift": 288, "sumcheck": 1696, "evals": 2560, "inner": 6241, "z": 8705}, "model": {"outer": 7920.000089086996, "jl": 2782.1109149348936, "lift": 288.0, "sumcheck": 1696.0, "chal": 384.0, "evals": 2560.0, "inner": 6240.000010318959, "z": 8730.09221870174}, "model_total": 30600.203233042586, "seeds": 384, "tp": 352.04750990867615, "tv": 156.74982237815857, "witness": "uniform", "stats": [{"level": 1, "kind": "commit", "m": 304383, "fill": 0.9734693467251709, "jl_tries": 2, "p_ratio": 0.9487628838764028, "z_ratio": 0.975560696948962, "c_tries": 1}, {"level": 2, "kind": "commit", "m": 15501, "fill": 0.9911074787787623, "jl_tries": 1, "p_ratio": 0.9497544658979646, "z_ratio": 0.9920022192542437, "c_tries": 1}, {"level": 3, "kind": "commit", "m": 2794, "fill": 0.9983773957066723, "jl_tries": 1, "p_ratio": 0.9716638132389496, "z_ratio": 0.9999635282504911, "c_tries": 1}, {"level": 4, "kind": "commit", "m": 1295, "fill": 1.0008001553644088, "jl_tries": 1, "p_ratio": 0.9855317729553312, "z_ratio": 1.0102367664861025, "c_tries": 1}, {"level": 5, "kind": "clear", "m": 900, "fill": 1.0070315499462155, "jl_tries": 1, "p_ratio": 0.9745185356178264, "z_ratio": 1.0112727947884723, "c_tries": 1}, {"level": 6, "kind": "last", "m": 713, "fill": 0.9883979931022892, "jl_tries": 1, "p_ratio": 0.9566949642071488, "z_ratio": 0.9820157883463827, "c_tries": 1}]}
+  prover level 6 done in 0.2s
+proof: 30225 bytes; prover 248 s
+  verifier level 1 done in 141.9s
+  verifier level 2 done in 2.3s
+  verifier level 3 done in 0.4s
+  verifier level 4 done in 0.2s
+  verifier level 5 done in 0.1s
+  verifier level 6 done in 0.1s
+verified: True; verifier 147 s
+{"key": "whip_gh30_C_438_full", "m": 304383, "logbeta": 16.54356134682999, "fill": 0.9734693467251709, "half": 36, "levels": 6, "ok": true, "tampered_rejected": true, "size": 30225, "sizes": {"outer": 7929, "nonce": 12, "jl": 2794, "lift": 288, "sumcheck": 1696, "evals": 2560, "inner": 6241, "z": 8705}, "model": {"outer": 7920.000089086996, "jl": 2782.1109149348936, "lift": 288.0, "sumcheck": 1696.0, "chal": 384.0, "evals": 2560.0, "inner": 6240.000010318959, "z": 8730.09221870174}, "model_total": 30600.203233042586, "seeds": 384, "tp": 248.07639408111572, "tv": 146.5575041770935, "witness": "uniform", "stats": [{"level": 1, "kind": "commit", "m": 304383, "fill": 0.9734693467251709, "jl_tries": 2, "p_ratio": 0.9487628838764028, "z_ratio": 0.975560696948962, "c_tries": 1}, {"level": 2, "kind": "commit", "m": 15501, "fill": 0.9911074787787623, "jl_tries": 1, "p_ratio": 0.9497544658979646, "z_ratio": 0.9920022192542437, "c_tries": 1}, {"level": 3, "kind": "commit", "m": 2794, "fill": 0.9983773957066723, "jl_tries": 1, "p_ratio": 0.9716638132389496, "z_ratio": 0.9999635282504911, "c_tries": 1}, {"level": 4, "kind": "commit", "m": 1295, "fill": 1.0008001553644088, "jl_tries": 1, "p_ratio": 0.9855317729553312, "z_ratio": 1.0102367664861025, "c_tries": 1}, {"level": 5, "kind": "clear", "m": 900, "fill": 1.0070315499462155, "jl_tries": 1, "p_ratio": 0.9745185356178264, "z_ratio": 1.0112727947884723, "c_tries": 1}, {"level": 6, "kind": "last", "m": 713, "fill": 0.9883979931022892, "jl_tries": 1, "p_ratio": 0.9566949642071488, "z_ratio": 0.9820157883463827, "c_tries": 1}]}
