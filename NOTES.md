@@ -133,3 +133,19 @@ Predictions (written before the runs):
   fails 251 times (proof fails); const/blockrep/maxdig_eq (z = (sum c_i) s_1) give heavy tails of ||z|| -> frequent
   retries and possibly failures.
 - guaranteed: every run succeeds, all fills <= 1 (well below), mean attempts <= 2 per projection / challenge vector.
+
+Results as they come in (details in proto/e2e.json, summary: python3 proto/e2e_summary.py):
+- N = 2^18, 2^20: 320 + 320 runs (8 kinds x 20 x {full, gc}), all accepted, y = f(x) checked directly.  Proof-based:
+  bytes within -0.14..+0.09 % of the model, first fold +2 bytes, commitment +1 byte (nonce, radix rounding).
+  Guaranteed: 1.2-1.8 % below the bound, all fills <= 0.63, at most 3 first-fold challenge vectors.
+  Structured kinds already show the effect: ||(z,e)||^2 up to 5.9x (const), 9.2x (maxdig: all lower digits equal
+  to -b0/2, so the lower-digit rows of all blocks coincide) its expectation, but ||w1||/beta1 <= 1.10 because the
+  z1 share of beta1^2 is only 1-2 %; up to 57 attempts for the projection of level 1.
+- N = 2^28, optimised, const polynomial (rep 0): ||w1||/beta1 = 1.748 (z parts 4.44x, ||(z,e)||^2 5.45x their model
+  values; t_hat, w_hat, low parts at 0.7-1.0x); the projection of level 1 was rejected 251 times -> the proof
+  fails (nonce exhausted).  One projection attempt costs about 12-14 s at this size (256 x 9.0M ternary entries).
+- The intermediate option P has the same first fold and the same beta1 as the optimised setting (run_final.job uses
+  gh.instance for it; beta0 = 102132.6 for both at 2^30), so it cannot help when the first-fold witness is too
+  long; it was therefore not run.
+- ring.ternary: same values through a byte table (Generator.integers(0,4,int8) on PCG64 = top two bits of the raw
+  bytes); checked in fastring.test, about 1.2x faster projections.

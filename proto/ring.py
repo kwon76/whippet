@@ -235,10 +235,25 @@ def uniform(rng, shape):
     return rng.integers(0, Q, size=shape, dtype=np.uint64)
 
 
-def ternary(rng, shape):
-    """entries -1, 0, 1 with probabilities 1/4, 1/2, 1/4"""
+def _ternary_ref(rng, shape):
     bits = rng.integers(0, 4, size=shape, dtype=np.int8)
     return (bits & 1) - (bits >> 1)
+
+
+# Generator.integers(0, 4, dtype=int8) returns, for a PCG64 generator without a cached half word, the top two
+# bits of the bytes of the raw 64-bit outputs in little-endian order (Lemire's method on buffered bytes).  The
+# table maps a raw byte directly to the ternary value; ternary() uses it when this applies (same values).
+_TLUT = {np.int8: np.array([((b >> 6) & 1) - ((b >> 6) >> 1) for b in range(256)], dtype=np.int8)}
+_TLUT[np.float64] = _TLUT[np.int8].astype(np.float64)
+
+
+def ternary(rng, shape, dtype=np.int8):
+    """entries -1, 0, 1 with probabilities 1/4, 1/2, 1/4"""
+    n = int(np.prod(shape))
+    bg = rng.bit_generator
+    if n % 8 == 0 and isinstance(bg, np.random.PCG64) and not bg.state['has_uint32']:
+        return _TLUT[dtype][bg.random_raw(n // 8).view(np.uint8)].reshape(shape)
+    return _ternary_ref(rng, shape).astype(dtype)
 
 
 _ROOTS = np.exp(1j * np.pi * (2 * np.arange(D // 2) + 1) / D)

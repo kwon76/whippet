@@ -243,6 +243,15 @@ def test(trials=40, seed=11, log=print):
         ref = np.stack([((S[i].astype(object) * a.astype(object)[:, None]).sum(axis=0) % Q).astype(np.uint64)
                         for i in range(r)])
         bad += int(not (scalar_dot(a, S) == ref).all())
+    for t in range(trials):                       # ternary(): table lookup equals Generator.integers
+        sd = int(rng.integers(0, 2 ** 62))
+        shape = [(256, 65536), (256, int(rng.integers(1, 3000))), (4, 8), (int(rng.integers(1, 50)), 3)][t % 4]
+        g1, g2 = np.random.Generator(np.random.PCG64(sd)), np.random.Generator(np.random.PCG64(sd))
+        for _ in range(3):                        # consecutive calls on the same generator, as in jl_chunks
+            a1, a2 = R._ternary_ref(g1, shape), R.ternary(g2, shape)
+            bad += int(not (a1 == a2).all())
+            bad += int(not (R.ternary(np.random.Generator(np.random.PCG64(sd + 1)), shape, np.float64)
+                            == R._ternary_ref(np.random.Generator(np.random.PCG64(sd + 1)), shape)).all())
     log("fastring.test: %d trials, %d mismatches" % (trials, bad))
     return bad == 0
 

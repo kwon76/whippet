@@ -276,7 +276,7 @@ def jl_chunks(seed, ncols):
     rng = np.random.Generator(np.random.PCG64(int.from_bytes(seed, "little")))
     for start in range(0, ncols, CHUNK):
         w = min(CHUNK, ncols - start)
-        yield start, R.ternary(rng, (JL, w)).astype(np.float64)
+        yield start, R.ternary(rng, (JL, w), np.float64)
 
 
 def jl_project(seed, wflat):
