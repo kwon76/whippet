@@ -76,6 +76,8 @@ oldtot = lambda k: FOLD[k]["total"] - (YPRIME if k.startswith("base_gh") else 0.
 num["BCaOld"], num["BCbOld"] = f1(oldtot("base_gh26_C_438_base")), f1(oldtot("base_gh28_C_438_base"))
 num["WQaOld"], num["WQbOld"] = f1(oldtot("whip_gh26_A_483_full")), f1(oldtot("whip_gh28_A_483_full"))
 num["BQaOld"], num["BQbOld"] = f1(oldtot("base_gh26_A_483_base")), f1(oldtot("base_gh28_A_483_base"))
+num["ModelFixMax"] = f1(max(abs(F[k]["total"] - FOLD[k]["total"]) for k in F
+                             if ("gh26" in k or "gh28" in k) and not k.endswith("_gc") and k in FOLD))
 e = ent("base", "gh", 30, "C", "base")
 num["TailShare"] = str(round(100 * e["tail"] / (e["total"] - YPRIME)))
 coms = [ent("whip", "gh", n, s, "full")["com"] for s in "CAQ" for n in NS]
@@ -343,6 +345,11 @@ num["EeNmin"] = pw(ESIZES[0])
 num["EeRuns"] = comma(sum(r['runs'] for r in ESUM.values()))
 num["EeOk"] = comma(sum(r['ok'] for r in ESUM.values()))
 num["EeKinds"] = str(len(ES.KINDS))
+MB = EDB.get("model_bug", {}).get("runs", {})
+if MB:
+    bug = MB["26_full_uniform"][0]
+    num["EeBugFill"] = "%.2f" % bug["ff"]["fill"]
+    num["EeBugS"] = "%.1f" % (bug["ff"]["s_norm2"] / (2 ** 26 * 5 * 64 * 64 / 12.0))
 num["EeNegSizes"] = ",".join(pw(n) for n in sorted({int(k.split('_')[0]) for k in ENEG}))      # math mode
 num["EeFlips"] = str(max(v['flips'] for v in ENEG.values()))
 with open(os.path.join(OUT, "tab_e2e.tex"), "w") as fh:
