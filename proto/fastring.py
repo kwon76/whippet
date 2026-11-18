@@ -53,23 +53,46 @@ def _absmax(s):
 # ---------------------------------------------------------------- A s for small s
 
 class Prepared:
-    """A (k, n, 64) with entries in [0, q), prepared for repeated products with small vectors."""
+    """A (k, n, 64) with entries in [0, q), prepared for repeated products with small vectors.
+
+    Fast path: the centred representatives of A (absolute value < 2^31) in float64, one product per
+    coefficient of s; exact as long as smax * rows * 2^31 < 2^53, where smax bounds |s| and rows is the
+    number of columns of A summed in one product (the columns are split into row blocks if necessary).
+    For large s two 16-bit limbs of A are used instead."""
 
     def __init__(self, A):
         self.A = A
         self.k, self.n = A.shape[0], A.shape[1]
-        if not SLOW:
-            A2 = np.ascontiguousarray(np.asarray(A, dtype=np.int64).transpose(0, 2, 1).reshape(self.k * D, self.n))
-            self.hi, self.lo = _limbs(A2)
-            del A2
+        self._c = self._hi = self._lo = None
 
-    def apply(self, S):
-        """S: (r, n, 64) small integers.  Returns (r, k, 64) uint64, row i = A S[i]."""
+    def _centred(self):
+        if self._c is None:
+            A2 = np.asarray(self.A, dtype=np.int64).transpose(0, 2, 1).reshape(self.k * D, self.n)
+            self._c = np.ascontiguousarray(np.where(A2 > Q // 2, A2 - Q, A2), dtype=np.float64)
+        return self._c
+
+    def _limbs2(self):
+        if self._hi is None:
+            A2 = np.ascontiguousarray(np.asarray(self.A, dtype=np.int64).transpose(0, 2, 1).reshape(self.k * D, self.n))
+            self._hi, self._lo = _limbs(A2)
+        return self._hi, self._lo
+
+    def apply(self, S, smax=None):
+        """S: (r, n, 64) small integers with |S| <= smax (default: a bound from the type or the values).
+        Returns (r, k, 64) uint64, row i = A S[i]."""
         S = np.asarray(S)
         r = S.shape[0]
         assert S.shape[1] == self.n
-        if SLOW or _absmax(S) * self.n * 65536.0 >= EXACT:
+        if smax is None:
+            smax = _absmax(S)
+        if SLOW or smax * self.n * 65536.0 >= EXACT:
             return np.stack([R.matvec_small(self.A, S[i].astype(np.int64)) for i in range(r)])
+        one = smax * float(1 << 31) * 64 < EXACT                       # blocks of at least 64 columns
+        if one:
+            rows = int(min(self.n, EXACT // (max(1, smax) * float(1 << 31)) - 1))
+            Ac = self._centred()
+        else:
+            hi, lo = self._limbs2()
         out = np.empty((r, self.k, D), dtype=np.uint64)
         rc = max(1, min(r, MEM // (8 * self.n)))                       # one coefficient of rc blocks at a time
         for s0 in range(0, r, rc):
@@ -81,9 +104,15 @@ class Prepared:
                 if not bu.any():
                     continue
                 su = np.ascontiguousarray(bu.T, dtype=np.float64)       # (n, rc)
-                ph = self.hi @ su
-                pl = self.lo @ su
-                part = ((ph.astype(np.int64) % Q) * 65536 + pl.astype(np.int64)) % Q     # (k*64, rc)
+                if one:
+                    part = np.zeros((self.k * D, nr), dtype=np.int64)
+                    for j0 in range(0, self.n, rows):
+                        part += (Ac[:, j0:j0 + rows] @ su[j0:j0 + rows]).astype(np.int64) % Q
+                    part %= Q
+                else:
+                    ph = hi @ su
+                    pl = lo @ su
+                    part = ((ph.astype(np.int64) % Q) * 65536 + pl.astype(np.int64)) % Q     # (k*64, rc)
                 part = part.reshape(self.k, D, nr).transpose(2, 0, 1)                    # (rc, k, 64)
                 rr = part[:, :, R.RIDX[u]]
                 if u:
@@ -202,6 +231,7 @@ def test(trials=40, seed=11, log=print):
         ref = np.stack([R.matvec_small(A, S[i]) for i in range(r)])
         bad += int(not (Prepared(A).apply(S) == ref).all())
         bad += int(not (Prepared(A).apply(S.astype(np.int16) if lim < 32000 else S) == ref).all())
+        bad += int(not (Prepared(A).apply(S, smax=lim) == ref).all())
         c = R.challenges(rng, r)
         ref = np.zeros((n, D), dtype=np.int64)
         for i in range(r):

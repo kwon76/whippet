@@ -89,7 +89,8 @@ class Params:
         self.lv = dict(n=self.nb, r=self.r, kap=self.n, k1=self.n1, t1=self.kt, tw=self.kw, b=self.b,
                        di=self.Dt, do=self.Du, b1=self.b, bw=self.b, dec=True, wmode='commit', m2=self.W0)
         top = (Q // 2) // self.b0 ** (self.d0 - 1) + 1
-        self.dtype = np.int8 if max(top, self.b0 // 2) < 127 else np.int16
+        self.smax = max(top, self.b0 // 2) + 1           # bound (with margin) on the absolute values of the digits
+        self.dtype = np.int8 if self.smax < 127 else np.int16
 
     def describe(self):
         return ("pcs;N=%d;m=%d;r=%d;b0=%d;d0=%d;b=%d;n=%d;n1=%d;Dt=%d;Du=%d;kt=%d;kw=%d;var=%s"
@@ -186,7 +187,7 @@ def commit(pp, f):
     st = State(pp, f32)
     Tm = np.empty((pp.r, pp.n, D), dtype=np.uint64)
     for i0, i1, S in st.chunks():
-        Tm[i0:i1] = pp.Aprep.apply(S)
+        Tm[i0:i1] = pp.Aprep.apply(S, smax=pp.smax)
     H, L = T.round_hi(Tm, pp.Dt)
     del Tm
     That = T.digits(H, pp.b, pp.kt).transpose(1, 0, 2, 3)                # (r, kt, n, 64)
