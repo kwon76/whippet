@@ -296,6 +296,119 @@ num["TestN"] = {5: "five", 6: "six", 7: "seven", 8: "eight"}[len(good)]
 dev = max(abs(t["dev"]) for t in good)
 num["TestDev"] = "0.1" if dev <= 0.1 else "%.1f" % dev
 
+# ---------------------------------------------------------------- end-to-end runs of the PCS (proto/e2e.json)
+sys.path.insert(0, os.path.join(ROOT, "proto"))
+import e2e_summary as ES                                    # noqa: E402
+EDB = ES.load(os.path.join(ROOT, "proto", "e2e.json"))
+ESUM = ES.summary(EDB)
+ENEG = ES.neg_summary(EDB)
+VNAME = {"full": "proof-based", "gc": "guaranteed", "P": "intermediate"}
+ESIZES = sorted({n for n, v in ESUM})
+assert ESIZES, "no end-to-end runs in proto/e2e.json"
+pw = lambda n: "2^{%d}" % n
+for key, r in ESUM.items():                                  # every accepted proof is correct
+    for kind, runs in ES.groups(EDB)[key].items():
+        assert all(x['y_correct'] for x in runs if x['ok'])
+assert all(v['honest'] and v['flips'] == v['flips_rejected'] for v in ENEG.values())
+assert all(all(v[k] for k in ('wrong_y', 'noncanonical_y', 'wrong_x', 'other_commitment', 'flipped_commitment',
+                              'proof_for_other_point', 'truncated', 'appended', 'empty'))
+           and all(v['edge_points_ok'].values()) for v in ENEG.values())
+num["EeSizes"] = ", ".join("$%s$" % pw(n) for n in ESIZES[:-1]) + " and $%s$" % pw(ESIZES[-1])
+num["EeNmax"] = pw(ESIZES[-1])
+num["EeNmin"] = pw(ESIZES[0])
+num["EeRuns"] = comma(sum(r['runs'] for r in ESUM.values()))
+num["EeOk"] = comma(sum(r['ok'] for r in ESUM.values()))
+num["EeKinds"] = str(len(ES.KINDS))
+num["EeNegSizes"] = ", ".join("$%s$" % pw(n) for n in sorted({int(k.split('_')[0]) for k in ENEG}))
+num["EeFlips"] = str(max(v['flips'] for v in ENEG.values()))
+with open(os.path.join(OUT, "tab_e2e.tex"), "w") as fh:
+    for n in ESIZES:
+        for var in ("full", "P", "gc"):
+            if (n, var) not in ESUM:
+                continue
+            r = ESUM[(n, var)]
+            dev = "$%+.2f$ to $%+.2f$" % (r['dev_min'], r['dev_max']) if r['ok'] else "--"
+            ff = "/".join(comma(x) for x in r['ff_bytes'][:1] + r['ff_bytes'][-1:]) if len(r['ff_bytes']) > 1 else comma(r['ff_bytes'][0])
+            com = comma(r['com_bytes'][0]) if len(r['com_bytes']) == 1 else "--"
+            fh.write("$%s$ & %s & %d of %d & $%s$--$%s$ & $%s$ & %s & $%s$ & $%s$ & $%s$ & $%s$\\\\\n" % (
+                pw(n) if var == "full" else "", VNAME[var], r['ok'], r['runs'], comma(r['bytes_min']), comma(r['bytes_max']),
+                comma(r['model_total']), dev, ff, comma(r['model_ff']), com, comma(r['model_com'])))
+optk = [(n, "full") for n in ESIZES if (n, "full") in ESUM]
+gck = [(n, "gc") for n in ESIZES if (n, "gc") in ESUM]
+devq = [d for k in optk for d in (ESUM[k]['dev_min'], ESUM[k]['dev_max']) if d is not None]
+num["EeDevLo"], num["EeDevHi"] = "%.2f" % min(devq), "%.2f" % max(devq)
+num["EeDevAbs"] = "%.2f" % max(abs(x) for x in devq)
+devg = [d for k in gck for d in (ESUM[k]['dev_min'], ESUM[k]['dev_max']) if d is not None]
+num["EeGcBelowLo"], num["EeGcBelowHi"] = "%.1f" % -max(devg), "%.1f" % -min(devg)
+ffd = [x - ESUM[k]['model_ff'] for k in optk + gck for x in ESUM[k]['ff_bytes']]
+num["EeFfDevMax"] = str(int(round(max(abs(x) for x in ffd))))
+cod = [x - ESUM[k]['model_com'] for k in optk + gck for x in ESUM[k]['com_bytes']]
+num["EeComDevMax"] = str(int(round(max(abs(x) for x in cod))))
+# kinds of polynomials, optimised and guaranteed setting, all sizes together
+with open(os.path.join(OUT, "tab_e2e_kinds.tex"), "w") as fh:
+    KN = {"uniform": "uniform in $[0,q)$", "sparse": "$1\\%$ non-zero", "const": "all coefficients equal",
+          "period7": "period $7$", "blockrep": "all blocks $\\mathbf f_i$ equal", "small8": "$8$-bit coefficients",
+          "maxdig": "extremal digits", "maxdig_eq": "extremal digits, all equal"}
+    for kind in ES.KINDS:
+        cells = []
+        for var in ("full", "gc"):
+            ks = [ESUM[(n, var)]['kinds'][kind] for n in ESIZES if (n, var) in ESUM and kind in ESUM[(n, var)]['kinds']]
+            if not ks:
+                cells += ["--"] * 4
+                continue
+            okn, rn = sum(s['ok'] for s in ks), sum(s['runs'] for s in ks)
+            am = [s['att_mean'] * s['ok'] for s in ks if s['att_mean']]
+            cells += ["%d of %d" % (okn, rn), "%.1f" % (sum(am) / max(1, okn)) if am else "--",
+                      str(max(s['att_max'] for s in ks if s['att_max'])) if am else "--",
+                      "%.3f--%.3f" % (min(s['fill1_min'] for s in ks), max(s['fill1_max'] for s in ks))]
+        fh.write("%s & %s\\\\\n" % (KN[kind], " & ".join(cells)))
+# times and memory, uniform polynomials
+with open(os.path.join(OUT, "tab_e2e_time.tex"), "w") as fh:
+    for n in ESIZES:
+        for var in ("full", "gc"):
+            if (n, var) not in ESUM or ESUM[(n, var)]['t_commit'] is None:
+                continue
+            r = ESUM[(n, var)]
+            fh.write("$%s$ & %s & %.1f & %.1f & %.1f & %s & %s\\\\\n" % (
+                pw(n) if var == "full" else "", VNAME[var], r['t_commit'], r['t_open'], r['t_verify'],
+                comma(r['rss_prover']), comma(r['rss_verifier'])))
+# levels of the largest size with both settings
+nlv = max(n for n in ESIZES if (n, "full") in ESUM and (n, "gc") in ESUM)
+num["EeNlv"] = pw(nlv)
+with open(os.path.join(OUT, "tab_e2e_levels.tex"), "w") as fh:
+    rows = [("first fold", None)] + [("%d" % (i + 1), i) for i in range(max(len(ESUM[(nlv, v)]['level_stats']) for v in ("full", "gc")))]
+    for name, i in rows:
+        cells = []
+        for var in ("full", "gc"):
+            r = ESUM[(nlv, var)]
+            if i is None:
+                ks = r['kinds'].values()
+                cells += ["%.3f--%.3f" % (min(s['fill1_min'] for s in ks), max(s['fill1_max'] for s in ks)),
+                          "--", "%.2f / %d" % (r['first_fold_tries_mean'], r['first_fold_tries_max'])]
+            elif i < len(r['level_stats']) and r['level_stats'][i]:
+                l = r['level_stats'][i]
+                cells += ["%.3f--%.3f" % (l['fill_min'], l['fill_max']), "%.2f / %d" % (l['jl_mean'], l['jl_max']),
+                          "%.2f / %d" % (l['c_mean'], l['c_max'])]
+            else:
+                cells += ["", "", ""]
+        fh.write("%s & %s\\\\\n" % (name, " & ".join(cells)))
+num["EeGcFillMax"] = "%.3f" % max(max(s['fill_max'] for s in ESUM[k]['kinds'].values() if s['fill_max']) for k in gck)
+assert float(num["EeGcFillMax"]) <= 1.0
+num["EeGcFfFillMax"] = "%.3f" % max(s['fill1_max'] for k in gck for s in ESUM[k]['kinds'].values())
+num["EeGcAttMax"] = str(max(s['att_max'] for k in gck for s in ESUM[k]['kinds'].values() if s['att_max']))
+num["EeOptFails"] = str(sum(ESUM[k]['failed'] for k in optk))
+num["EeGcFails"] = str(sum(ESUM[k]['failed'] for k in gck))
+uni1 = [s for k in optk for s in [ESUM[k]['kinds'].get('uniform')] if s]
+num["EeOptUniFillLo"] = "%.3f" % min(s['fill1_min'] for s in uni1)
+num["EeOptUniFillHi"] = "%.3f" % max(s['fill1_max'] for s in uni1)
+num["EeOptFillHi"] = "%.3f" % max(s['fill1_max'] for k in optk for s in ESUM[k]['kinds'].values())
+num["EeOptFillLo"] = "%.3f" % min(s['fill1_min'] for k in optk for s in ESUM[k]['kinds'].values())
+num["EeOptAttMax"] = str(max(s['att_max'] for k in optk for s in ESUM[k]['kinds'].values() if s['att_max']))
+num["EeOptJlMax"] = str(max(s['jl_max'] for k in optk for s in ESUM[k]['kinds'].values()))
+num["EeOptCMax"] = str(max(s['c_max'] for k in optk for s in ESUM[k]['kinds'].values()))
+num["EeVerifyMax"] = "%.0f" % max(ESUM[k]['t_verify'] for k in optk + gck if ESUM[k]['t_verify'])
+num["EeCommitMax"] = "%.0f" % max(ESUM[k]['t_commit'] for k in optk + gck if ESUM[k]['t_commit'])
+
 # ---------------------------------------------------------------- challenge pairs
 with open(os.path.join(OUT, "tab_pairs.tex"), "w") as fh:
     for k in ("3", "4"):

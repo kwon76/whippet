@@ -44,6 +44,14 @@ SCRATCH = os.environ.get("WHIPPET_SCRATCH", tempfile.gettempdir())
 
 
 def rss_mb():
+    """peak resident set size of this process in MB.  VmHWM belongs to the address space and is reset by
+    exec; ru_maxrss is not (on Linux a child started by fork + exec inherits the parent's value)."""
+    try:
+        for line in open("/proc/self/status"):
+            if line.startswith("VmHWM:"):
+                return int(line.split()[1]) / 1024.0
+    except Exception:
+        pass
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
 
 
@@ -263,6 +271,20 @@ def load(outp):
         return dict(meta=[], params={}, runs={}, neg={})
 
 
+def update(outp, fn):
+    """read-modify-write of the output file under an exclusive lock, written atomically"""
+    import fcntl
+    with open(outp + ".lock", "w") as lk:
+        fcntl.flock(lk, fcntl.LOCK_EX)
+        db = load(outp)
+        fn(db)
+        tmp = outp + ".tmp"
+        json.dump(db, open(tmp, "w"), indent=1)
+        os.replace(tmp, outp)
+        fcntl.flock(lk, fcntl.LOCK_UN)
+    return db
+
+
 def main():
     args = [a for a in sys.argv[1:]]
     if args[0] == "--verify":
@@ -279,12 +301,17 @@ def main():
             i += 1
     outp = opt.get("out", os.path.join(HERE, "e2e.json"))
     workers = int(opt.get("workers", "4"))
-    db = load(outp)
-    db['meta'].append(meta())
     mode, logN, vars_ = pos[0], int(pos[1]), pos[2].split(",")
-    for var in vars_:
-        db['params']["%d_%s" % (logN, var)] = params_summary(logN, var)
-    json.dump(db, open(outp, "w"), indent=1)
+    section = opt.get("section", "runs")          # 'timing': runs on an otherwise idle machine, for the timings
+    m0 = meta()
+    m0['argv'] = sys.argv[1:]
+
+    def init(db):
+        db['meta'].append(m0)
+        db.setdefault(section, {})
+        for var in vars_:
+            db['params']["%d_%s" % (logN, var)] = params_summary(logN, var)
+    db = update(outp, init)
     import multiprocessing as mp
     ctx = mp.get_context("spawn")
     if mode == "runs":
@@ -294,7 +321,7 @@ def main():
         for var in vars_:
             for kind in kinds:
                 key = "%d_%s_%s" % (logN, var, kind)
-                done = {r['rep'] for r in db['runs'].get(key, [])}
+                done = {r['rep'] for r in db[section].get(key, [])}
                 jobs += [(logN, var, kind, rep) for rep in range(reps) if rep not in done]
         fn = one_run
     else:
@@ -312,7 +339,7 @@ def main():
         for rec in pool.imap_unordered(fn, jobs):
             if mode == "runs":
                 key = "%d_%s_%s" % (rec['logN'], rec['var'], rec['kind'])
-                db['runs'].setdefault(key, []).append(rec)
+                update(outp, lambda db: db.setdefault(section, {}).setdefault(key, []).append(rec))
                 st = rec.get('stats', [])
                 print("%-26s rep %2d ok=%s bytes=%s ff_fill=%.4f tries ff=%s jl=%s c=%s  t=%.0f/%.0f/%.0fs %s" % (
                     key, rec['rep'], rec['ok'], rec.get('proof_bytes'), rec.get('ff', {}).get('fill', float('nan')),
@@ -321,9 +348,8 @@ def main():
                     rec.get('failed', '')), flush=True)
             else:
                 key = "%d_%s" % (rec['logN'], rec['var'])
-                db['neg'].setdefault(key, []).append(rec)
+                update(outp, lambda db: db['neg'].setdefault(key, []).append(rec))
                 print(key, json.dumps(rec), flush=True)
-            json.dump(db, open(outp, "w"), indent=1)
 
 
 if __name__ == "__main__":
