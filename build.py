@@ -470,6 +470,22 @@ fails = [(n, kind, x) for (n, var), r in ESUM.items() if var == "full"
          for kind, runs in ES.groups(EDB)[(n, var)].items() for x in runs if not x['ok']]
 num["EeOptFailSizes"] = ",".join(pw(n) for n in sorted({f[0] for f in fails})) or "none"      # math mode
 num["EeOptFailKinds"] = str(len({f[1] for f in fails}))
+fk = sorted({f[1] for f in fails})
+FKNAME = {"maxdig": "polynomials whose coefficients all have extremal digits",
+          "maxdig_eq": "polynomials whose coefficients all have extremal digits",
+          "const": "constant polynomials", "period7": "periodic polynomials", "blockrep": "polynomials with equal blocks",
+          "uniform": "uniform polynomials", "sparse": "sparse polynomials", "small8": "polynomials with small coefficients"}
+names = []
+for k in fk:
+    if FKNAME[k] not in names:
+        names.append(FKNAME[k])
+num["EeOptFailKindText"] = " and ".join(names) if names else "no polynomial"
+num["EeOptFailNmin"] = pw(min(f[0] for f in fails)) if fails else "--"
+fruns = [x for (n, var), r in ESUM.items() if var == "full" and fails and n >= min(f[0] for f in fails)
+         for kind, runs in ES.groups(EDB)[(n, var)].items() if kind in fk for x in runs]
+num["EeOptFailKindRuns"] = str(len(fruns))
+num["EeOptRuns"] = comma(sum(ESUM[k]['runs'] for k in ESUM if k[1] == "full"))
+num["EeGcRuns"] = comma(sum(ESUM[k]['runs'] for k in ESUM if k[1] == "gc"))
 if fails:
     ff_fail = [f[2]['ff']['fill'] for f in fails]
     num["EeFailFillLo"], num["EeFailFillHi"] = "%.2f" % min(ff_fail), "%.2f" % max(ff_fail)
