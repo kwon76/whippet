@@ -1,0 +1,65 @@
+\section{Preliminaries}\label{sec:prelim}
+
+\paragraph{Rings and norms.}
+Let $d$ be a power of two, $R=\Z[X]/(X^d+1)$, $K=\Q[X]/(X^d+1)$ and $\Rq=R/qR$ for a prime $q\equiv5\pmod 8$. Elements of $\Rq$ are identified with their representatives with coefficients in $[-(q-1)/2,(q-1)/2]$. For $a\in R$ we write $\vecc(a)\in\Z^d$ for its coefficient vector, $\ct(a)$ for its constant coefficient, and $\norm a$ for the Euclidean norm of $\vecc(a)$; this extends to vectors over $R$ by concatenation. Vectors are written in bold, and $\ip{\mathbf a}{\mathbf b}=\sum_la_lb_l$ is the bilinear dot product. The automorphisms of $R$ are $\sigma_j\colon X\mapsto X^j$ for odd $j$; in particular $\conj\colon X\mapsto X^{-1}$, and
+\begin{equation}\label{eq:ct}
+\ct\bigl(\ip{\conj(\mathbf a)}{\mathbf b}\bigr)=\ip{\vecc(\mathbf a)}{\vecc(\mathbf b)}\qquad\text{for }\mathbf a,\mathbf b\in R^n .
+\end{equation}
+Let $\Omega\subset\CC$ be the set of primitive $2d$-th roots of unity. Then $\norm a^2=\frac1d\sum_{\zeta\in\Omega}\lvert a(\zeta)\rvert^2$, and the operator norm $\opn a=\max_{\zeta\in\Omega}\lvert a(\zeta)\rvert$ satisfies $\norm{ab}\le\opn a\norm b$.
+
+Throughout the paper $d=64$ and $q$ is a prime of about 32 bits with $q\equiv5\pmod8$; the implementation uses $q=2^{32}-99$. For such $q$ the polynomial $X^d+1$ has two irreducible factors of degree $d/2$ modulo $q$, and every non-zero element of $\Rq$ whose coefficients are smaller than $\sqrt{q/2}$ in absolute value is invertible~\cite{LS18}.
+
+\paragraph{Challenges.}
+We use the challenge space of LaBRADOR~\cite{BS23}: $\Ch\subset R$ consists of the polynomials with $23$ coefficients equal to $0$, $31$ equal to $\pm1$ and $10$ equal to $\pm2$ whose operator norm is at most $T=15$. Thus $\norm c^2=\tau=71$ for all $c\in\Ch$. There are $2^{128.1}$ polynomials with these coefficients, of which a fraction of $0.18$ satisfies the condition on the operator norm ($10^7$ samples), so that $\lvert\Ch\rvert\approx2^{125.6}$. We write $\Chd=\{c-c'\mid c\ne c'\in\Ch\}$; the elements of $\Chd$ are invertible in $\Rq$ and have operator norm at most $2T$.
+
+\paragraph{Module-SIS.}
+\begin{definition}\label{def:msis}
+Let $\kappa,m\ge1$ and $B>0$. The problem $\msis_{\kappa,m,B}$ asks, given a uniformly random $A\in\Rq^{\kappa\times m}$, for a non-zero $\mathbf x\in R^m$ with $A\mathbf x=0\bmod q$ and $\norm{\mathbf x}\le B$. The \emph{normal-form} problem $\nfsis_{\kappa,m,B}$ asks, given a uniformly random $A\in\Rq^{\kappa\times m}$, for a non-zero $(\mathbf x,\mathbf y)\in R^m\times R^\kappa$ with $A\mathbf x+\mathbf y=0\bmod q$ and $\norm{(\mathbf x,\mathbf y)}\le B$.
+\end{definition}
+The two problems are equivalent up to the number of columns: a solver for $\nfsis_{\kappa,m,B}$ solves $\msis_{\kappa,m+\kappa,B}$ whenever the last $\kappa$ columns of the instance form an invertible matrix, which fails with probability at most $4q^{-d/2}$. We estimate the hardness of Module-SIS as in~\cite{BS23}. Lattice reduction with block size $\mathsf b$ reaches the root Hermite factor $\delta(\mathsf b)=\bigl((\pi\mathsf b)^{1/\mathsf b}\,\mathsf b/(2\pi e)\bigr)^{1/(2(\mathsf b-1))}$, and the shortest vector that it finds in the kernel lattice of $A\in\Rq^{\kappa\times m}$ has norm about
+\begin{equation}\label{eq:mr}
+\min_{m'}\ \delta^{m'}q^{\kappa d/m'}=2^{\,2\sqrt{\kappa d\,\log_2q\,\log_2\delta}}
+\end{equation}
+when the optimal dimension is available~\cite{MR09}. A commitment key of rank $\kappa$ is considered secure for the norm $B$ if $2\sqrt{\kappa d\log_2q\log_2\delta(\mathsf b)}>\log_2B$. We use two block sizes: $\mathsf b=438$, as in~\cite{BS23,NS24}, for which sieving costs $2^{0.292\,\mathsf b}\approx2^{128}$ classical operations~\cite{BDGL16}, and $\mathsf b=483$, for which $2^{0.265\,\mathsf b}\approx2^{128}$ in the quantum Core-SVP model~\cite{ADPS16}, as in~\cite{DBK26}.
+
+\paragraph{Rounded commitments.}
+Ajtai commitments~\cite{Ajt96} to short vectors are uniform-looking elements of $\Rq^\kappa$, and their low-order bits can be dropped at the cost of a short error term in the opening, as in signature compression~\cite{BG14,DKLLSSS18}. We use the following formulation, in which the error term becomes part of the opening.
+
+\begin{definition}\label{def:hilo}
+Let $\varrho\ge0$ be an integer. For $x\in\Z_q$ with representative $\tilde x\in[-(q-1)/2,(q-1)/2]$ let $\lo_\varrho(x)$ be the integer in $(-2^{\varrho-1},2^{\varrho-1}]$ congruent to $\tilde x$ modulo $2^\varrho$, and $\hi_\varrho(x)=(\tilde x-\lo_\varrho(x))/2^\varrho$. Both maps are applied coefficient-wise.
+\end{definition}
+
+Thus $x=2^\varrho\hi_\varrho(x)+\lo_\varrho(x)$, and $\hi_\varrho(x)$ takes at most $q/2^\varrho+2$ values, so that high parts are stored with $\log_2(q/2^\varrho+2)$ bits per coefficient. For $\varrho=0$ the low part vanishes.
+
+\begin{definition}\label{def:rcom}
+Let $A\in\Rq^{\kappa\times m}$. The \emph{rounded commitment} to $\vs\in\Rq^m$ is $\vu=\hi_\varrho(A\vs)$. An \emph{opening} of $\vu$ of norm $\beta$ is a pair $(\vs,\vl)\in\Rq^m\times\Rq^\kappa$ with
+\begin{equation}\label{eq:nf-open}
+A\vs-\vl=2^\varrho\vu\pmod q\qquad\text{and}\qquad\norm{(\vs,\vl)}\le\beta .
+\end{equation}
+A \emph{weak opening} of norm $\beta$ is a triple $(\vs,\vl,\bar c)$ with $\bar c\in\Chd$, $A\vs-\vl=2^\varrho\vu\pmod q$ and $\norm{\bar c\cdot(\vs,\vl)}\le\beta$.
+\end{definition}
+
+The honest committer uses $\vl=\lo_\varrho(A\vs)$. Equation~\eqref{eq:nf-open} says that $(\vs\,\|\,\vl)$ opens the Ajtai commitment $2^\varrho\vu$ under the key $[A\mid-I_\kappa]$.
+
+\begin{lemma}[binding]\label{lem:binding}
+Let $A\in\Rq^{\kappa\times m}$ and $\vu\in R^\kappa$.
+\begin{enumerate}[label=(\roman*)]
+\item Two openings $(\vs,\vl)\ne(\vs',\vl')$ of $\vu$ of norm $\beta$ yield a solution of $\nfsis_{\kappa,m,2\beta}$ for $A$.
+\item Two weak openings $(\vs,\vl,\bar c)$, $(\vs',\vl',\bar c)$ of $\vu$ of norm $\beta$ with the same $\bar c$ and $(\vs,\vl)\ne(\vs',\vl')$ yield a solution of $\nfsis_{\kappa,m,2\beta}$ for $A$.
+\item Two weak openings $(\vs,\vl,\bar c)$, $(\vs',\vl',\bar c')$ of $\vu$ of norm $\beta$ with $(\vs,\vl)\ne(\vs',\vl')$ yield a solution of $\nfsis_{\kappa,m,4T\beta}$ for $A$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+Subtracting the two instances of~\eqref{eq:nf-open} gives $A(\vs-\vs')-(\vl-\vl')=0$; in particular $\vs=\vs'$ implies $\vl=\vl'$. This shows~(i). For~(ii) multiply by $\bar c$, which is invertible: $\mathbf x=\bar c\vs-\bar c\vs'$ and $\mathbf y=-(\bar c\vl-\bar c\vl')$ satisfy $A\mathbf x+\mathbf y=0$, $\mathbf x\ne0$ and $\norm{(\mathbf x,\mathbf y)}\le2\beta$. For~(iii) multiply by $\bar c\bar c'$ and write $\mathbf x=\bar c'(\bar c\vs)-\bar c(\bar c'\vs')$ and $\mathbf y$ accordingly; then $\norm{(\mathbf x,\mathbf y)}\le\opn{\bar c'}\beta+\opn{\bar c}\beta\le4T\beta$.
+\end{proof}
+
+\paragraph{Projections.}
+Let $\chi$ be the distribution on $\{-1,0,1\}$ with $\chi(0)=1/2$ and $\chi(\pm1)=1/4$.
+\begin{lemma}[{\cite[Lemma~4.2]{BS23}}]\label{lem:jl}
+There is $\varepsilon_{\mathrm{JL}}\lesssim2^{-128}$ such that for every $b\le q/125$ and every integer vector $\mathbf w\in[-q/2,q/2]^N$ with $\norm{\mathbf w}\ge b$,
+$\Pr_{\Pi\leftarrow\chi^{256\times N}}\bigl[\norm{\Pi\mathbf w\bmod q}<\sqrt{30}\,b\bigr]\le\varepsilon_{\mathrm{JL}}$.
+\end{lemma}
+For every $\mathbf w\in\Z^N$ we have $\E\norm{\Pi\mathbf w}^2=128\norm{\mathbf w}^2$. As in~\cite{BS23}, the verifier accepts projections of norm at most $\sqrt{128}\,\beta$, and the extracted witness is only guaranteed to have norm at most $\sqrt{128/30}\,\beta$; we call $\sqrt{128/30}\approx2.07$ the \emph{slack} of the norm proof.
+
+\paragraph{Arguments of knowledge.}
+All protocols are public-coin. A protocol for a relation $\mathcal R$ is \emph{knowledge sound with knowledge error $\varepsilon_0$} if there is an extractor which, given a statement and rewinding access to a deterministic prover that makes the verifier accept with probability $\varepsilon>\varepsilon_0$, outputs a witness in expected time polynomial in the size of the statement and in $(\varepsilon-\varepsilon_0)^{-1}$. Our statements are computational: the extractor outputs a witness \emph{or} a solution to an instance of $\nfsis$ that is assumed to be hard. Following~\cite{BS23}, we say that the prover is \emph{bound} to a value if two accepting transcripts in which the value differs yield such a solution. The protocols are made non-interactive with the Fiat--Shamir transformation~\cite{FS86}; all theorems are about the interactive protocols, and \cref{sec:fs} discusses the status of the non-interactive ones.

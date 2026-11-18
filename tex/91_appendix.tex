@@ -1,0 +1,101 @@
+\appendix
+
+\section{Proof of Theorem~\ref{thm:level}}\label{app:proof}
+
+We follow the proof of~\cite[Theorem~5.1]{BS23}. It suffices to consider deterministic provers. Let $\mathcal P^*$ be a deterministic prover that makes the verifier accept with probability $\varepsilon>\varepsilon_0$. In an accepting transcript we write $\vz=\vz^{(0)}+b\vz^{(1)}$, $\ve=\ve^{(0)}+b\ve^{(1)}$, $\tH_i=G_1\that_i$ and $h_i=G_w\hat{\mathbf h}_i$ for the values recomposed from the last message. Since $\norm{\vw'}\le\beta'$,
+\begin{equation}\label{eq:app-norms}
+\norm{(\vz,\ve)}\le\norm{(\vz^{(0)},\ve^{(0)})}+b\,\norm{(\vz^{(1)},\ve^{(1)})}\le(b+1)\beta',\qquad\norm{(\that,\vd_1)}\le\beta',\qquad\norm{(\hat{\mathbf h},\vd_2)}\le\beta' .
+\end{equation}
+Whenever we say that the prover is bound to a value, two accepting transcripts in which the value differs yield a solution to one of the instances of $\nfsis$ in the statement of the theorem; we argue as if this did not happen.
+
+\paragraph{Step 1: outer commitments.}
+The message $\vu_1$ is the same in all transcripts. By the third row of~\eqref{eq:next} and~\eqref{eq:app-norms}, $(\that,\vd_1)$ is an opening of norm $\beta'$ of the rounded commitment $\vu_1$ under the key $B$. By \cref{lem:binding}(i) the prover is bound to $\that$, hence to the $\tH_i$. In the same way the fourth row binds the prover to $\hat{\mathbf h}$, hence to the $h_i$, in all accepting transcripts that agree on the challenges sent before $\vu_2$, that is, on all challenges except $c_1,\dots,c_r$.
+
+\paragraph{Step 2: weak openings.}
+As in~\cite{BS23,NS22}, for each $i$ the extractor obtains two accepting transcripts that differ only in the challenge $c_i\ne c_i'$. It repeats the following until it succeeds: it runs $\mathcal P^*$ with fresh challenges until it finds an accepting transcript, and then runs it up to $N=\lceil1/p_0\rceil$ times with all challenges of this transcript except a fresh $c_i'$, where $p_0=\varepsilon/2-1/\lvert\Ch\rvert>0$; it succeeds if one of these runs is accepting with $c_i'\ne c_i$, and otherwise starts again with a new first transcript. Call the challenges other than $c_i$ of a transcript \emph{heavy} if $\mathcal P^*$ succeeds with probability at least $\varepsilon/2$ over the choice of $c_i$. The challenges of a random accepting transcript are heavy with probability at least $1/2$, because the transcripts that are accepting and not heavy have total probability less than $\varepsilon/2$. If they are heavy, each of the $N$ runs succeeds with probability at least $p_0$, and one of them does with probability at least $1-(1-p_0)^N\ge1-1/e$. An iteration thus succeeds with probability at least $(1-1/e)/2$ and costs $1/\varepsilon+N$ runs in expectation, so the expected number of runs for one $i$ is $O(1/p_0)=O\bigl((\varepsilon-2/\lvert\Ch\rvert)^{-1}\bigr)$. Let $(\vz,\ve)$ and $(\vz',\ve')$ be the two responses, $\bar c_i=c_i-c_i'$ and
+\[
+(\vs^*_i,\vl^*_i)=\bar c_i^{-1}\bigl((\vz,\ve)-(\vz',\ve')\bigr)\in\Rq^n\times\Rq^\kappa .
+\]
+Subtracting the first row of~\eqref{eq:next} for the two transcripts, in which the $\tH_j$ coincide by Step~1, gives
+\begin{equation}\label{eq:app-weak}
+A\vs^*_i-\vl^*_i=2^{\rin}\tH_i\qquad\text{and}\qquad\norm{\bar c_i(\vs^*_i,\vl^*_i)}\le2(b+1)\beta' .
+\end{equation}
+Thus $(\vs^*_i,\vl^*_i,\bar c_i)$ is a weak opening of $\tH_i$ of norm $2(b+1)\beta'$. It does not depend on the transcripts from which it was computed: by \cref{lem:binding}(iii), two different weak openings of this norm of the same $\tH_i$ yield a solution of $\nfsis_{\kappa,n,4T\cdot2(b+1)\beta'}$, which is the problem for $A$ in the statement of the theorem, and the $\tH_i$ are the same in all accepting transcripts by Step~1. In particular the vector $\vs^*=(\vs^*_1,\dots,\vs^*_r)$ is determined by the first message $\vu_1$, before any challenge is chosen, although the extractor can compute it only at the end. It is fixed from now on. We show that it is a witness for the norm bound $\sqrt{128/30}\,\beta$ by bounding the probability that a transcript is accepting if it is not.
+
+\paragraph{Step 3: the form of the response.}
+Fix $i_0$. For an accepting transcript let $\mathbf y=(\vz,\ve)-c_{i_0}(\vs^*_{i_0},\vl^*_{i_0})$. By the first row of~\eqref{eq:next} and~\eqref{eq:app-weak}, $[A\mid-I]\,\mathbf y=2^{\rin}\sum_{i\ne i_0}c_i\tH_i$, and by~\eqref{eq:app-norms} and~\eqref{eq:app-weak}
+\[
+\norm{\bar c_{i_0}\mathbf y}\le\opn{\bar c_{i_0}}\norm{(\vz,\ve)}+\opn{c_{i_0}}\norm{\bar c_{i_0}(\vs^*_{i_0},\vl^*_{i_0})}\le2T(b+1)\beta'+2T(b+1)\beta' .
+\]
+In two accepting transcripts that agree on all challenges except $c_{i_0}$, the vectors $\mathbf y$ are thus weak openings of norm $4T(b+1)\beta'$ of the same rounded commitment $\sum_{i\ne i_0}c_i\tH_i$ with the same $\bar c_{i_0}$. By \cref{lem:binding}(ii) and the hardness of $\nfsis_{\kappa,n,8T(b+1)\beta'}$ they coincide: in all accepting transcripts that differ only in $c_{i_0}$ we have $\vz=\mathbf y_z+c_{i_0}\vs^*_{i_0}$, where $\mathbf y_z$, the first component of $\mathbf y$, does not depend on $c_{i_0}$.
+
+\paragraph{Step 4: partial evaluations.}
+For challenges $\rho$ let $h^*_i=\ip{\vE}{\vs^*_i}$. We claim that an accepting transcript with $h_i\ne h^*_i$ for some $i$ occurs with probability at most $1/\lvert\Ch\rvert$. The $h_i$, the $h_i^*$ and $\vE$ are determined by the challenges other than $c_1,\dots,c_r$; let $i_0$ be the smallest index with $h_{i_0}\ne h^*_{i_0}$ and fix all challenges except $c_{i_0}$. By Step~3 the second row of~\eqref{eq:next} reads
+\[
+c_{i_0}\bigl(h^*_{i_0}-h_{i_0}\bigr)=\sum_{i\ne i_0}c_ih_i-\ip{\vE}{\mathbf y_z}
+\]
+in every accepting transcript, and the right-hand side does not depend on $c_{i_0}$. If the equation held for two values of $c_{i_0}$, their difference, which is invertible, would annihilate $h^*_{i_0}-h_{i_0}\ne0$. Hence at most one of the $\lvert\Ch\rvert$ values of $c_{i_0}$ leads to an accepting transcript.
+
+\paragraph{Step 5: sum-check.}
+Let $\vPhi$ and $b$ be as in~\eqref{eq:agg}. For $j\le\mu$ let $g_j^*$ be the polynomial of step~4 of \cref{sec:level} computed from $\vs^*$ and $\rho_1,\dots,\rho_{j-1}$, and let $g_j$ be the polynomial that the verifier reconstructs. Then $g_1^*(0)+g_1^*(1)=\Theta(\ip{\vPhi}{\vs^*})$, $g^*_{j+1}(0)+g^*_{j+1}(1)=g_j^*(\rho_j)$ and $g^*_\mu(\rho_\mu)=\Theta(\sum_i\Phi'_ih^*_i)$, while $g_1(0)+g_1(1)=b$, $g_{j+1}(0)+g_{j+1}(1)=g_j(\rho_j)$ and $g_\mu(\rho_\mu)=v$. Consider an accepting transcript with $h_i=h_i^*$ for all $i$ and $\Theta(\ip{\vPhi}{\vs^*})\ne b$. Then $g_1\ne g_1^*$, and $g_\mu(\rho_\mu)=g^*_\mu(\rho_\mu)$ by the fifth row of~\eqref{eq:next}. Let $j$ be the largest index with $g_j\ne g_j^*$. Then $g_j(\rho_j)=g_j^*(\rho_j)$, either because $j=\mu$ or because $g_{j+1}=g_{j+1}^*$. Both polynomials have degree at most $2$ and are determined before $\rho_j$ is chosen, so this happens with probability at most $2/\lvert\FF\rvert$ for each $j$, and such transcripts occur with probability at most $2\mu/\lvert\FF\rvert$.
+
+\paragraph{Step 6: aggregation.}
+Let $\hat y_k\in\FF$ be the lifted values used by the verifier, with $\tau_0(\hat y_k)=\ip{\omega^{(k)}}{\mathbf p}$. The vectors $\vs^*$ and $\vpsi_k$ and the values $\hat y_k$ are fixed before $\alpha$, $\xi$ and $\nu$ are chosen. By \cref{lem:agg}, applied to the constraints of the statement together with the $\FF$-constraints $\Theta(\ip{\vpsi_k}{\vs^*})=\hat y_k$, the probability that $\Theta(\ip{\vPhi}{\vs^*})=b$ although one of these constraints is violated is $1/\lvert\FF\rvert$.
+
+\paragraph{Step 7: projection.}
+Suppose that $\Theta(\ip{\vpsi_k}{\vs^*})=\hat y_k$ for all $k\le\kq$. Applying $\tau_0$ and using \cref{lem:theta}(iii) and~\eqref{eq:ct} gives $\sum_j\omega^{(k)}_j\bigl(\ip{\pi_j}{\vecc(\vs^*)}-p_j\bigr)=0$ in $\Z_q$ for all $k$. If $\mathbf p\ne\Pi\,\vecc(\vs^*)\bmod q$, this happens with probability $q^{-\kq}$ over the choice of the $\omega^{(k)}$, which are sent after $\mathbf p$.
+
+\paragraph{Step 8: norm.}
+If $\mathbf p=\Pi\,\vecc(\vs^*)\bmod q$ and $\norm{\vs^*}>\sqrt{128/30}\,\beta$, then by \cref{lem:jl} with $b=\sqrt{128/30}\,\beta\le q/125$ the verifier's check $\norm{\mathbf p}\le\sqrt{128}\,\beta=\sqrt{30}\,b$ passes with probability at most $\varepsilon_{\mathrm{JL}}$ over the choice of $\Pi$, which is sent after $\vu_1$.
+
+\paragraph{Conclusion.}
+The constraint vectors of the statement vanish on the padding, and removing coordinates does not increase the norm; so if the padded vector $\vs^*$ satisfies the constraints and the norm bound, its first $m$ coordinates are a witness, and it suffices to show the former. Suppose that $\vs^*$ violates a constraint of the statement or has norm larger than $\sqrt{128/30}\,\beta$. Then every accepting transcript belongs to one of the events of Steps~4 to~8: either some $h_i$ differs from $h_i^*$; or the aggregated claim is false for $\vs^*$; or it is true although a constraint of the statement or a lifted value is wrong; or all constraints hold and all lifted values are right, in which case the norm of $\vs^*$ is too large and $\mathbf p$ either is not its projection or is. The probabilities of these events add up to $1/\lvert\Ch\rvert+(2\mu+1)/\lvert\FF\rvert+q^{-\kq}+\varepsilon_{\mathrm{JL}}<\varepsilon_0<\varepsilon$, a contradiction. By Step~2 the extractor runs $\mathcal P^*$ an expected number of $O\bigl(r/(\varepsilon-2/\lvert\Ch\rvert)\bigr)\le O\bigl(r/(\varepsilon-\varepsilon_0)\bigr)$ times.
+
+For the terminal level, replace Step~1 by the observation that the $\tH_i$ and $h_i$ are sent before the challenges on which they must not depend, and~\eqref{eq:app-norms} by $\norm{(\vz,\ve)}\le\bar\gamma$, which is~\eqref{eq:terminal}. \qed
+
+\section{The Size Model}\label{app:model}
+
+\paragraph{Ranks.}
+For a norm $B$ the rank is the smallest $\kappa$ with $2\sqrt{\kappa d\log_2q\log_2\delta(\mathsf b)}>\log_2B$, see~\eqref{eq:mr}.
+
+\paragraph{Coding.}
+Vectors of small integers are coded with an arithmetic coder under a discretised Gaussian model.
+\begin{lemma}\label{lem:coding}
+Let $\sigma>0$. There is a prefix-free code that encodes every $\mathbf v\in\Z^N$ with $\norm{\mathbf v}^2\le N\sigma^2$ in at most $N\log_2\bigl((\sigma\sqrt{2\pi}+1)\sqrt e\bigr)+2$ bits.
+\end{lemma}
+\begin{proof}
+Let $P(x)=e^{-x^2/2\sigma^2}/Z$ for $x\in\Z$. Arithmetic coding with the model $P$ uses at most $-\sum_i\log_2P(v_i)+2$ bits~\cite{WNC87}. Here $Z=\sum_xe^{-x^2/2\sigma^2}$ is at most $\sigma\sqrt{2\pi}+1$, and
+\[
+-\sum_i\log_2P(v_i)=N\log_2Z+\frac{\norm{\mathbf v}^2}{2\sigma^2\ln2}\le N\log_2Z+N\log_2\sqrt e .\qedhere
+\]
+\end{proof}
+The bound depends only on the norm that the verifier checks anyway. We write $H(\sigma)=\log_2((\sigma\sqrt{2\pi}+1)\sqrt e)$; without coding the model uses $\log_2(12\sigma)$ bits per coefficient as in~\cite{BS23}. A high part $\hi_\varrho$ takes $\log_2(q/2^\varrho+2)$ bits per coefficient.
+
+\paragraph{A recursive level.}
+Let $\gamma^2=\tau\beta^2$ and $\gamma_e^2=\tau\,r\kappa d\,4^{\rin}/12$, the expected squared norms of $\vz$ and $\ve$ by \cref{lem:mean} for low parts that are uniform; for the bound of \cref{sec:completeness} both are doubled. With $\sigma_z=\gamma/\sqrt{nd}$ the base is $b=\lfloor(\sqrt{12}\,\sigma_z)^{1/2}\rceil$, the inner commitments have $t_1=\lfloor(\log_2q-\rin)/\log_2b\rceil$ digits in base $b_1=\lceil(q/2^{\rin})^{1/t_1}\rceil$, and the partial evaluations $t_w=\lfloor\log_2q/\log_2b\rceil$ digits in base $b_w=\lceil q^{1/t_w}\rceil$. Digits and low parts are counted with the variance of a uniform distribution, as in~\cite{BS23}:
+\[
+\beta'^2=\frac{2\gamma^2}{b^2}+\frac{b_1^2}{12}\,r\kappa t_1d+\frac{b_w^2}{12}\,rt_wd+\Bigl(\frac{b^2}{12}\,\kappa d+\frac{\gamma_e^2}{b^2}\Bigr)+\frac{4^{\rout}}{12}\,2\kappa_1d .
+\]
+The number $\rin$ of dropped bits is the largest for which $r\kappa d\,4^{\rin}/12$ is at most a fraction of $\beta^2$ that is part of the search, and $\rout$ the largest for which the last term is at most a fraction $\eta\in\{0.1,0.3\}$ of the others. Since $\kappa$ and $\kappa_1$ depend on $\beta'$, they are determined by fixed-point iteration. The level contributes
+\[
+2\kappa_1d\log_2\bigl(q/2^{\rout}+2\bigr)+256\,H\bigl(\beta/\sqrt2\bigr)+\kq(f-1)\log_2q+2\mu f\log_2q+512
+\]
+bits, and the next witness has $m'$ ring elements as in~\eqref{eq:mprime}. If $\vz$ is not decomposed or the partial evaluations are sent in the clear, the corresponding terms change in the obvious way.
+
+\paragraph{The terminal level.}
+It contributes $r\kappa d\log_2(q/2^{\rin}+2)+rd\log_2q+nd\,H(\sigma_z)$ bits for the inner commitments, the partial evaluations and $\vz$, plus the projection, the lifting, the sum-check and the seeds as above; $\kappa$ is chosen for $8T\bar\gamma$ in the proof-based and for $2\bar\gamma$ in the conventional setting, where $\bar\gamma^2=\gamma^2+\gamma_e^2$, and all $\rin\le16$ are tried.
+
+\paragraph{Guaranteed parameters.}
+In the guaranteed setting of \cref{sec:completeness} the variances above are replaced by squared maximal absolute values and the bounds on $\vz$ and $\ve$ by the joint bound~\eqref{eq:joint}; the norm bound of the next level is $B'$ from~\eqref{eq:bprime}. Since the verifier of the next level accepts projections for $\sqrt{1+t}\,B'$, the ranks are chosen for $2\varsigma\sqrt{1+t}\,B'$ and $8T(b+1)\varsigma\sqrt{1+t}\,B'$ with $\varsigma=\sqrt{128/30}$, and for $8T\sqrt Q$ in the terminal level. The base is $b=\lfloor(2\sqrt{Q/((n+\kappa)d)})^{1/2}\rceil$, which balances the first two terms of~\eqref{eq:bprime}. The projection is coded with $\sigma=\sqrt{(1+t)/2}\,B$ and the opening of the terminal level with $\sigma=\sqrt{Q/(nd)}$, so that by \cref{lem:coding} the sizes of the model are upper bounds for all proofs. We use $\theta=2$ and $t=128^{-1/2}$.
+
+\paragraph{Search.}
+The recursion is found by a beam search of width $160$ over at most eight levels; a state is a pair $(m,\beta)$, and the options of a level are $r$ from a geometric grid, decomposition or not, committed or clear partial evaluations, and the budget for the inner low parts. LaBRADOR is modelled along the same lines with the formulas of~\cite[Section~5]{BS23}, including the garbage polynomials and their decomposition, and its recursion is optimised in the same way.
+
+\paragraph{First fold.}
+The witness of~\eqref{eq:gh-system} has $\delta_wr+\delta_tnr+2\delta_0m+2n_1+2n$ ring elements, where $\delta_w$ and $\delta_t$ are the numbers of digits of $\vw$ and of the inner commitments. In the conventional and proof-based settings the shape $(m,r,b_0,\delta_0,b_1)$ is that of~\cite[Table~4]{NS24}, and the norm bound is computed from the variances of the digits, of $\vz$ and of the low parts as above; the inner commitments drop $\varrho_t\in\{8,9\}$ bits, which removes one digit, and the outer ones $\varrho_u\in\{11,12\}$ bits. In the guaranteed setting $m$ and $r$ are kept, the polynomial is split into $\delta_0=\lceil32/\log_2b_0\rceil$ digits for $b_0\in\{8,16\}$, the commitments have digits in base $2^6$, $\varrho_t$ is the largest number with $rnd\,4^{\varrho_t-1}\le B_s^2/10$, and the norm bound is computed as in \cref{sec:completeness}; the model selected $b_0=16$ with $\varrho_t\in\{7,8\}$ and $\varrho_u\in\{10,11\}$.
+
+\section{Challenge Pairs for Proposition~\ref{prop:weak}}\label{app:pairs}
+
+The following two challenges $c\in\Ch$ are such that the polynomial $c'$ obtained by exchanging the coefficients of $X^0$ and $X^1$ is also in $\Ch$; the differences are $c-c'=3(1-X)$ for the first and $4(1-X)$ for the second. Coefficients are listed from $X^0$ to $X^{63}$; the operator norms of $c$ and $c'$ are given after each list.
+
+\input{gen/tab_pairs.tex}

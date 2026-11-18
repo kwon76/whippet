@@ -1,0 +1,108 @@
+\section{Polynomial Commitments}\label{sec:pcs}
+
+We instantiate the tail with the commitment and the first fold of Greyhound~\cite{NS24}, to which we make two changes: the commitments are rounded, and the evaluation claim is lifted to $\FF$. In this section $m$, $n$ and $n_1$ have the meaning of~\cite{NS24}: block length, inner rank and outer rank.
+
+\paragraph{Commitment.}
+A polynomial $f\in\Z_q[X]$ of degree less than $N=mrd$ is written as $f=\sum_{i<r}\sum_{j<m}X^{d(mi+j)}f_{i,j}(X)$ with $\deg f_{i,j}<d$, and the $f_{i,j}$ are regarded as elements of $\Rq$. Let $\mathbf f_i=(f_{i,j})_{j<m}$ and $\vs_i=G^{-1}_{b_0,m}(\mathbf f_i)\in R^{\delta_0m}$ its digits in base $b_0$. With uniformly random $A\in\Rq^{n\times\delta_0m}$ and $B$, $D$ with $n_1$ rows, the committer computes
+\[
+\tH_i=\hi_{\varrho_t}(A\vs_i),\quad\vl_i=\lo_{\varrho_t}(A\vs_i),\quad\that_i=G^{-1}_{b_1,n}(\tH_i),\quad\vu=\hi_{\varrho_u}(B\that),\quad\ve_u=\lo_{\varrho_u}(B\that).
+\]
+The commitment is $\vu$; it has $n_1d\log_2(q/2^{\varrho_u}+2)$ bits.
+
+\paragraph{Evaluation claims.}
+Let $x\in\Z_q$ and $\psi_x=\conj\bigl(\sum_{k<d}x^kX^k\bigr)$. By~\eqref{eq:ct}, $g(x)=\ct(\psi_xg)$ for every $g\in\Z_q[X]$ of degree less than $d$, and therefore
+\begin{equation}\label{eq:eval}
+f(x)=\ct\bigl(\psi_x\cdot\mathbf a^\top[\mathbf f_1|\cdots|\mathbf f_r]\,\mathbf b\bigr),\qquad\mathbf a=(x^{dj})_{j<m},\quad\mathbf b=(x^{dmi})_{i<r} .
+\end{equation}
+This is a $\Z_q$-constraint. Greyhound hands it to LaBRADOR, which lifts constraints over $\Z_q$ to $\Rq$ together with its own~\cite[Remark~4.3]{NS24}. We lift it to $\FF$ as in \cref{sec:field}: with $y'=\mathbf a^\top[\mathbf f_1|\cdots|\mathbf f_r]\mathbf b$, the prover sends $\hat y=\Theta(\psi_xy')\in\FF$ without the coordinate $\tau_0(\hat y)=y$, which takes $12$ bytes.
+
+\paragraph{First fold.}
+Let $\bar{\mathbf a}=G_{b_0,m}^\top\mathbf a$, so that $\mathbf a^\top\mathbf f_i=\ip{\bar{\mathbf a}}{\vs_i}$. The prover computes $w_i=\ip{\bar{\mathbf a}}{\vs_i}$ for $i<r$ and $\what=G^{-1}_{b_1,r}(\vw)$, sends $\mathbf v=\hi_{\varrho_u}(D\what)$ and keeps $\ve_v=\lo_{\varrho_u}(D\what)$. It receives $c_1,\dots,c_r\leftarrow\Ch$ and computes $\vz=\sum_ic_i\vs_i$ and $\ve=\sum_ic_i\vl_i$. It then knows a short vector $(\what,\that,\vz,\ve_v,\ve_u,\ve)$ with
+\begin{equation}\label{eq:gh-system}
+\begin{aligned}
+D\what-\ve_v&=2^{\varrho_u}\mathbf v, &\qquad B\that-\ve_u&=2^{\varrho_u}\vu,\\
+\ip{\bar{\mathbf a}}{\vz}-\textstyle\sum_ic_i\,G_{b_1}\what_i&=0, &\qquad A\vz-\ve-2^{\varrho_t}\textstyle\sum_ic_i\,G_{b_1,n}\that_i&=0,\\
+\Theta\bigl(\psi_x\textstyle\sum_ib_i\,G_{b_1}\what_i\bigr)&=\hat y .
+\end{aligned}
+\end{equation}
+With $\vz$ and $\ve$ split into two parts in base $b$, this is a statement of $\Rlin$ with $2n_1+n+1$ $R$-constraints and one $\FF$-constraint, and it is proved with the linear tail (\cref{fig:greyhound}). Up to the names of the variables,~\eqref{eq:gh-system} is~\eqref{eq:next}: the first fold is a level of the tail in which the constraint vector already is the same for all blocks, so that no sum-check is needed, and whose norm proof is left to the next level.
+
+\begin{figure}[t]
+\centering\small
+\setlength{\tabcolsep}{0pt}
+\renewcommand{\arraystretch}{1.32}
+\fbox{\begin{minipage}{0.975\linewidth}
+\setlength{\fboxsep}{2.2pt}%
+\textbf{Commitment to $f$.}\quad $\vs_i=G^{-1}_{b_0,m}(\mathbf f_i)$,\quad \rd{\tH_i=\hi_{\varrho_t}(A\vs_i),\ \ \vl_i=\lo_{\varrho_t}(A\vs_i)},\quad $\that_i=G^{-1}_{b_1,n}(\tH_i)$\\[3pt]
+\rd{\vu=\hi_{\varrho_u}(B\that),\ \ \ve_u=\lo_{\varrho_u}(B\that)}\quad The commitment is $\vu$.
+
+\medskip\hrule\medskip
+\begin{tabular}{@{}L{0.455\linewidth}C{0.225\linewidth}L{0.32\linewidth}@{}}
+\multicolumn{1}{@{}c}{\textbf{Prover} $\mathcal P\bigl(f;\ \vs_i,\vl_i,\that,\ve_u\bigr)$} & & \multicolumn{1}{c@{}}{\textbf{Verifier} $\mathcal V\bigl(\vu,x,y\bigr)$}\\
+\hline
+$w_i=\ip{\bar{\mathbf a}}{\vs_i}$,\quad $\what=G^{-1}_{b_1,r}(\vw)$ & & \\
+\rd{\mathbf v=\hi_{\varrho_u}(D\what),\ \ \ve_v=\lo_{\varrho_u}(D\what)} & & \\
+\rd{\hat y=\Theta\bigl(\psi_x\textstyle\sum_ib_iw_i\bigr)} & \msgr{\mathbf v,\ \hat y\ \text{without}\ \tau_0(\hat y)} & \rd{\tau_0(\hat y):=y}\\
+ & \msgl{c_1,\dots,c_r} & $c_i\leftarrow\Ch$\\
+$\vz=\sum_ic_i\vs_i$,\quad \rd{\ve=\textstyle\sum_ic_i\vl_i} & & \\[2pt]
+\multicolumn{3}{@{}c@{}}{\fbox{\begin{minipage}{0.9\linewidth}\centering \rd{\text{linear tail}} for the statement~\eqref{eq:gh-system} and the witness $(\what,\that,\vz^{(0)},\vz^{(1)},\,$\rd{\ve_v,\ve_u,\ve^{(0)},\ve^{(1)}}$)$ of norm at most $\beta_0$\end{minipage}}}\\[2pt]
+\end{tabular}
+\end{minipage}}
+\caption{Commitment and evaluation protocol. Shaded parts differ from Greyhound~\cite[Figures~1 and~4]{NS24}, where the commitments are not rounded, the evaluation claim remains a constraint over $\Z_q$, and the last box is a LaBRADOR proof.}
+\label{fig:greyhound}
+\end{figure}
+
+\paragraph{Security.}
+An opening of $\vu$, in the relaxed sense of~\cite{NS24} adapted to rounded commitments, consists of $\that$, $\ve_u$ and, for each $i$, a weak opening $(\bar\vs_i,\bar\vl_i,\bar c_i)$ of $\tH_i=G_{b_1,n}\that_i$:
+\begin{equation}\label{eq:gh-open}
+A\bar\vs_i-\bar\vl_i=2^{\varrho_t}G_{b_1,n}\that_i,\qquad B\that-\ve_u=2^{\varrho_u}\vu,\qquad\norm{\bar c_i(\bar\vs_i,\bar\vl_i)}\le2\bar\gamma_z,\qquad\norm{(\that,\ve_u)}\le\bar\gamma .
+\end{equation}
+It opens $\vu$ to the polynomial with blocks $\mathbf f_i=G_{b_0,m}\bar\vs_i$.
+
+\begin{lemma}\label{lem:greyhound}
+Consider the three-round protocol in which the prover of \cref{fig:greyhound} sends $(\what,\that,\vz,\ve_v,\ve_u,\ve)$ in the clear and the verifier checks~\eqref{eq:gh-system}, $\norm{(\what,\that,\ve_v,\ve_u)}\le\bar\gamma$ and $\norm{(\vz,\ve)}\le\bar\gamma_z$.
+\begin{enumerate}[label=(\roman*)]
+\item From a set of accepting transcripts with the same first message that contains, for every $i\le r$, two transcripts whose challenge vectors differ exactly in the $i$-th coordinate, one can compute an opening~\eqref{eq:gh-open} of $\vu$ to a polynomial $\bar f$ with $\bar f(x)=y$, or a solution of $\nfsis_{n_1,\cdot,2\bar\gamma}$ for $B$ or for $D$.
+\item From two openings~\eqref{eq:gh-open} of the same $\vu$ to different polynomials one can compute a solution of $\nfsis_{n_1,\cdot,2\bar\gamma}$ for $B$ or a solution of $\nfsis_{n,\delta_0m,8T\bar\gamma_z}$ for $A$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(i) If two of the transcripts differ in $(\that,\ve_u)$ or in $(\what,\ve_v)$, the first row of~\eqref{eq:gh-system} and \cref{lem:binding}(i) give the solution for $B$ or $D$. Otherwise $\that$ and $\what$ are the same in all of them; let $w_i=G_{b_1}\what_i$. For each $i$ take the two transcripts that differ exactly in the $i$-th coordinate, let $\bar c_i$ be the difference of these coordinates and $(\bar\vs_i,\bar\vl_i)=\bar c_i^{-1}\bigl((\vz,\ve)-(\vz',\ve')\bigr)$ for their responses. Subtracting the second row for the two transcripts gives $\ip{\bar{\mathbf a}}{\bar\vs_i}=w_i$ and $A\bar\vs_i-\bar\vl_i=2^{\varrho_t}G_{b_1,n}\that_i$, and $\norm{\bar c_i(\bar\vs_i,\bar\vl_i)}\le2\bar\gamma_z$. For $\bar{\mathbf f}_i=G_{b_0,m}\bar\vs_i$ the third row, which involves only $\what$, says $\Theta(\psi_x\,\mathbf a^\top[\bar{\mathbf f}_1|\cdots|\bar{\mathbf f}_r]\mathbf b)=\hat y$, and applying $\tau_0$ gives $\bar f(x)=y$ by~\eqref{eq:eval} and \cref{lem:theta}(iii).
+(ii) If the openings differ in $(\that,\ve_u)$, apply \cref{lem:binding}(i) to $B$. Otherwise they contain weak openings of the same $\tH_j$ with $\bar\vs_j\ne\bar\vs'_j$ for some $j$, and \cref{lem:binding}(iii) applies to $A$ with $\beta=2\bar\gamma_z$.
+\end{proof}
+
+\subsection{Security of the evaluation protocol}\label{sec:pcs-sec}
+
+We use the syntax and the notions of binding and knowledge soundness for polynomial commitments of~\cite{NS24}, with openings in the sense of~\eqref{eq:gh-open}. Let $\lambda$ be the number of levels of the tail. For $j\le\lambda$ let $\beta_j$ be the bound that the verifier of level $j$ uses for its projection, so that $\beta_1$ is the norm bound of the relation~\eqref{eq:gh-system} and $\beta_{j+1}$ the norm bound of the relation that level $j$ produces; let $b_j$, $\kappa^{(j)}$, $\kappa_1^{(j)}$ and $\mu_j$ be the parameters of level $j$, and $\bar\gamma_\lambda$ the bound of the terminal level. We write $\varsigma=\sqrt{128/30}$ for the slack.
+
+\begin{theorem}\label{thm:pcs}
+Suppose that $\varsigma\beta_j\le q/125$ for all $j$ and that the following problems are hard:
+\begin{enumerate}[label=(\arabic*)]
+\item for the first fold, $\nfsis_{n_1,\cdot,2\varsigma\beta_1}$ for $B$ and for $D$, and $\nfsis_{n,\delta_0m,8T(b+1)\varsigma\beta_1}$ for $A$;
+\item for every level $j<\lambda$, $\nfsis$ with rank $\kappa_1^{(j)}$ and norm $2\varsigma\beta_{j+1}$ for its two outer keys, and with rank $\kappa^{(j)}$ and norm $8T(b_j+1)\varsigma\beta_{j+1}$ for its inner key;
+\item for the terminal level, $\nfsis$ with rank $\kappa^{(\lambda)}$ and norm $8T\bar\gamma_\lambda$ for its inner key.
+\end{enumerate}
+Then the following holds for openings~\eqref{eq:gh-open} with $\bar\gamma=\varsigma\beta_1$ and $\bar\gamma_z=(b+1)\varsigma\beta_1$.
+\begin{enumerate}[label=(\alph*)]
+\item \emph{Binding.} Two openings of the same commitment $\vu$ open it to the same polynomial.
+\item \emph{Knowledge soundness.} The interactive protocol that consists of the first fold of \cref{fig:greyhound} and the $\lambda$ levels of the tail is knowledge sound for the relation of statements $(\vu,x,y)$ and openings of $\vu$ to a polynomial $\bar f$ with $\bar f(x)=y$. Its knowledge error is
+\[
+\frac{2}{\lvert\Ch\rvert}+\lambda\,\varepsilon_0,\qquad\varepsilon_0=\varepsilon_{\mathrm{JL}}+q^{-\kq}+\frac{2\mu+1}{\lvert\FF\rvert}+\frac2{\lvert\Ch\rvert},\quad\mu=\max_j\mu_j .
+\]
+\item \emph{Completeness.} An honest execution is accepted if, in the first fold and in every level, the projection and the vector handed to the next level satisfy their norm bounds.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(a) is \cref{lem:greyhound}(ii). For~(b), \cref{thm:level} applied to level $j<\lambda$ with $\varsigma\beta_{j+1}$ in place of $\beta'$, its analogue for the terminal level, and the composition of proofs of knowledge~\cite{BS23} show that the tail is knowledge sound for $\Rlin$ with the statement~\eqref{eq:gh-system} and the norm bound $\varsigma\beta_1$, with knowledge error $\lambda\varepsilon_0$; these are assumptions~(2) and~(3). It remains to show that the three-round protocol of \cref{lem:greyhound} with $\bar\gamma=\varsigma\beta_1$ is knowledge sound with knowledge error $2/\lvert\Ch\rvert$; note that a witness of~\eqref{eq:gh-system} of norm $\varsigma\beta_1$ satisfies the verifier's bounds, since $\norm{(\vz,\ve)}\le(b+1)\varsigma\beta_1$. For each $i\le r$ the extractor obtains two accepting transcripts that differ exactly in $c_i$, as in Step~2 of \cref{app:proof}, in expected time $O\bigl((\varepsilon-2/\lvert\Ch\rvert)^{-1}\bigr)$ for a prover with success probability $\varepsilon$, and applies \cref{lem:greyhound}(i). In contrast to the proof of \cref{thm:level}, nothing probabilistic is left to check, because the evaluation claim is a constraint on $\what$ alone. (c) holds because the relations~\eqref{eq:gh-system} and~\eqref{eq:next} are satisfied by construction.
+\end{proof}
+
+For the parameters of \cref{sec:eval} we have $\lambda\le8$ and $\mu\le13$, so the knowledge error is below $2^{-119}$. Part~(c) is conditional; \cref{thm:complete} removes the condition for the guaranteed parameters, for which the first fold and every level succeed after an expected number of at most two attempts for each projection and each vector of challenges, whatever the polynomial. As in~\cite{NS24}, the extracted polynomial has coefficients $G_{b_0,m}\bar\vs_i$ for a weak opening $\bar\vs_i$; nothing is claimed about the size of its digits.
+
+\subsection{The non-interactive protocol}\label{sec:fs}
+
+Three numbers must be kept apart: the cost of the best known attack on the commitment keys, which is what ``$128$ bits of Core-SVP hardness'' refers to; the knowledge error of the interactive protocol, which \cref{thm:pcs} bounds by $2^{-119}$; and the success probability of a cheating prover against the non-interactive protocol, for which we have no theorem.
+
+The implementation derives all $1+\sum_j(\mu_j+4)$ challenges by hashing. For interactive proofs that are special sound in every round, the Fiat--Shamir transformation increases the knowledge error by a factor of at most $Q+1$ for a prover that makes $Q$ queries to the random oracle~\cite{AFK22}, and the same loss holds for protocols with round-by-round soundness~\cite{BCS16,CCH19}; in general the loss can be exponential in the number of rounds. Our protocol, like LaBRADOR, is not special sound: only the last challenge of a level is treated by rewinding, and Steps~4 to~8 of \cref{app:proof} bound, challenge by challenge, the probability that an accepting transcript exists although the extracted witness is not valid. This has the shape of a round-by-round analysis, except that the witness to which the analysis refers is fixed only computationally, by the binding property of the commitments. We do not know a published theorem that covers this situation, for our protocol or for~\cite{BS23,NS24}, and we do not prove one. If the loss is $Q+1$ as in the two cases above, a prover with $Q$ queries breaks the non-interactive evaluation protocol with probability at most $(Q+1)(2/\lvert\Ch\rvert+\lambda\varepsilon_0)<2^{-119}(Q+1)$, up to its advantage against Module-SIS; this conditional bound is the one implicit in the parameters of this paper and of the prior work. With $f=8$ the terms that involve $\FF$ become negligible, and the bound is then dominated by $2/\lvert\Ch\rvert$ as in LaBRADOR (\cref{sec:ablation}). A proof in the quantum random oracle model is open as well.
+
+\paragraph{What is not changed.}
+The verifier computes $\bar{\mathbf a}$, $\mathbf b$ and the statement~\eqref{eq:gh-system}, whose size is proportional to $m+r\approx\sqrt{N/d}$, and then runs the verifier of the tail, which is linear in the size of the statement. This is the verifier of Greyhound. The commitment has more than a kilobyte. Hachi and Akita~\cite{NOZ26,DBK26} improve precisely these two points with other first folds. The tail accepts any statement of $\Rlin$; we have not worked out its combination with those protocols.

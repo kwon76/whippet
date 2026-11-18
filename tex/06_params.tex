@@ -1,0 +1,154 @@
+\section{Parameters and Proof Sizes}\label{sec:eval}
+
+\subsection{Model and settings}\label{sec:model}
+
+Proof sizes are computed by a script that, for a witness length $m$ and a norm bound $\beta$, searches over the shapes of the recursion: the number of levels and, for every level, the multiplicity $r$, whether $\vz$ is decomposed, whether the partial evaluations are committed, and the numbers of dropped bits. For every candidate it evaluates the formulas of \cref{app:model}, with the smallest ranks that satisfy~\eqref{eq:mr} for the required norms. The same script contains a model of LaBRADOR, built from~\cite[Section~5]{BS23}, which serves as the baseline; the first fold of Greyhound is modelled with the shape parameters of~\cite[Table~4]{NS24}. The model of the linear tail is checked against an implementation in \cref{sec:impl}. All our sizes are in $\mathrm{KB}=1024$ bytes, are sizes of evaluation proofs without the commitment, and include $64$ bytes of challenge seeds per level, as in~\cite{BS23}.
+
+A parameter set fixes two things: the norms for which the commitments are binding, which determine the ranks, and the norm bounds that the honest prover has to meet, which determine those norms. The literature is not uniform in either respect. We report three settings.
+
+\begin{description}[leftmargin=1.2em,itemsep=2pt]
+\item[Proof-based.] Every rank is chosen for the norm that the soundness proof requires, that is, as in the hypotheses of \cref{thm:pcs}: for a recursive level $2\sqrt{128/30}\,\beta'$ for $\kappa_1$ and $8T(b+1)\sqrt{128/30}\,\beta'$ for $\kappa$; for the terminal level $8T\bar\gamma$; for the first fold the norms of \cref{lem:greyhound}, with the challenge space of \cref{sec:prelim}. For LaBRADOR we use the norms of~\cite[Theorem~5.1]{BS23} in the same way. The bounds $\beta'$ themselves are the expected norms of the honest prover's vectors, as in~\cite{BS23}. ``Proof-based'' thus refers to soundness; completeness is heuristic in this setting.
+\item[Guaranteed.] Ranks as in the proof-based setting, but all norm bounds hold for every witness, so that completeness is proved (\cref{sec:completeness}). This setting exists for the linear tail only.
+\item[Conventional.] Ranks are chosen from the expected norms without slack, $2\beta'$ for $\kappa_1$ and $8T\gamma$ for $\kappa$, where $\gamma=\sqrt\tau\beta$ is the expected norm of $\vz$; the inner commitments of the terminal level are dimensioned for $2\bar\gamma$; the first fold uses the published ranks $(n,n_1)=(18,7)$ and the challenges of~\cite{NS24}.
+\end{description}
+
+The conventional setting is not justified by \cref{thm:level} or by~\cite[Theorem~5.1]{BS23}. We include it because it is the one under which our LaBRADOR model reproduces published sizes: within $1.1\%$ for the six instances of~\cite[Table~2]{BS23}, and \nBCa, \nBCb{} and \nBCc\KB{} for Greyhound with $N=2^{26},2^{28},2^{30}$, where~\cite{NS24} reports $46$, $53$ and $53\KB$. We do not claim that the published sizes were computed in this way. For the proof-based setting the natural reference is the recalibration of Greyhound in~\cite{DBK26}, which also adjusts the rank of every commitment for $128$ bits of quantum Core-SVP hardness, that is, block size $483$. For $N=2^{30}$ it reports between $66$ and $67$ kilobytes of $1000$ bytes, where our model gives \nBQc\KB, which is \nBQcDec{} in that unit and about $5\%$ more; that recalibration differs from ours in details such as the projection matrices. Comparisons between our own numbers are not affected by these differences.
+
+Every setting except the guaranteed one has three baselines: Greyhound with LaBRADOR as published; the same with the quadratic garbage polynomials $g_{ij}$ removed, which is what LaBRADOR needs for a linear relation; and the latter with the rounding and coding of this paper applied to it, which isolates the effect of the new structure.
+
+\subsection{Evaluation proofs}\label{sec:main}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{5.5pt}
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+setting & protocol & $N=2^{26}$ & $N=2^{28}$ & $N=2^{30}$\\
+\midrule
+\input{gen/tab_main.tex}
+\bottomrule
+\end{tabular}
+\caption{Sizes of evaluation proofs in KB for polynomials with $N$ coefficients modulo $q\approx2^{32}$, computed with the model of \cref{sec:model}; the number after the setting is the block size. ``Greyhound'' is the first fold of~\cite{NS24} followed by LaBRADOR; ``without $g_{ij}$'' the same with LaBRADOR specialised to linear relations; ``rounded and coded'' the latter with rounded commitments and entropy coding; ``this work'' the protocol of \cref{fig:greyhound}. The rows ``saving'' give the saving of this work relative to the three baselines in this order, and the rows ``commitment'' the size of the commitment to the polynomial in this work.}
+\label{tab:main}
+\end{table}
+
+\Cref{tab:main} contains the main result. In the proof-based setting with block size $483$ the proof for $N=2^{30}$ has \nWQc\KB, against \nBQc\KB{} for Greyhound with LaBRADOR, \nLQc\KB{} without quadratic garbage and \nSQc\KB{} when the baseline is also rounded and coded. Over the three sizes and the three settings with baselines, the proofs are \nPctLo\% to \nPctHi\% shorter than those of Greyhound with LaBRADOR, \nPctLinLo\% to \nPctLinHi\% shorter than without $g_{ij}$, and \nPctStrongLo\% to \nPctStrongHi\% shorter than the rounded and coded baseline. The last comparison is the one that measures the new structure alone.
+
+In the guaranteed setting the proofs have \nGQa, \nGQb{} and \nGQc\KB, between \nGPctLo\% and \nGPctHi\% more than in the proof-based setting; this is the price of bounds that hold for every polynomial (\cref{sec:completeness}), and these sizes are upper bounds that proofs for typical polynomials do not reach. They are still below all three baselines of the proof-based setting, whose completeness is heuristic. In the conventional setting the proof for $N=2^{30}$ has \nWCc\KB, against \nBCc\KB{} in the model and $53\KB$ published.
+
+The commitment to the polynomial has between \nComLo{} and \nComHi{} bytes in the conventional and proof-based settings and up to \nGComHi{} bytes in the guaranteed one, where Greyhound has $1792$ bytes with its published ranks; rounding removes about a third of the commitment for given ranks, which is far from the $128$ bytes of Akita.
+
+\subsection{Where the bytes are}\label{sec:bytes}
+
+\begin{figure}[t]
+\centering
+\input{gen/fig_bars.tex}
+\caption{Composition of an evaluation proof for $N=2^{30}$ in the model: Greyhound with LaBRADOR (L), with LaBRADOR without quadratic garbage (L$'$), and this work (W), in the conventional setting with block size $438$ and in the proof-based setting with block size $483$. ``Cross terms'' are the garbage polynomials that LaBRADOR sends in its last level and the partial evaluations that the linear tail sends in the clear.}
+\label{fig:bars}
+\end{figure}
+
+\Cref{fig:bars} shows the composition of the proofs. In LaBRADOR the lifting polynomials alone take about a kilobyte in each of the six or seven levels; here they take \nLiftW\KB{} in total, and the sum-check messages \nScW\KB. The last level of LaBRADOR sends $2r-1$ linear garbage polynomials and the last witness is long because it contains the garbage of the previous level; here the last witness consists of $\vz$, a few digits and low parts. Rounding shortens the outer commitments and the inner commitments of the terminal level, and coding shortens $\vz$.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4.6pt}
+\begin{tabular}{@{}crrrrrrrrrrr@{}}
+\toprule
+level & $m$ & $\log_2\beta$ & $r$ & $n$ & $\mu$ & $\kappa$ & $\kappa_1$ & $\rin$ & $\rout$ & $b$ & KB\\
+\midrule
+\input{gen/tab_sched.tex}
+\bottomrule
+\end{tabular}
+\caption{The recursion selected by the model for $N=2^{30}$ in the proof-based setting with block size $483$. Level~$0$ is the first fold with Greyhound's shape; its row lists the rank $n$ under $\kappa$ and $n_1$ under $\kappa_1$, and $\varrho_t,\varrho_u$ under $\rin,\rout$. A $^*$ marks levels in which the partial evaluations are sent in the clear, a $^\dagger$ levels in which $\vz$ is not decomposed; the last row is the terminal level. The column KB is the contribution to the proof.}
+\label{tab:sched}
+\end{table}
+
+\Cref{tab:sched} lists the levels for one setting. The first level of the tail reduces a witness of $\nSchedM$ ring elements to $\nSchedMtwo$, and the terminal level sends \nSchedLastKB\KB, which is \nSchedLastPct\% of the proof: as in LaBRADOR, most of the proof is the opening of the last witness.
+
+\subsection{Contribution of the individual ideas}\label{sec:ablation}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+ & conventional & proof-based & proof-based\\
+ & $438$ & $438$ & $483$\\
+\midrule
+\input{gen/tab_ablation.tex}
+\bottomrule
+\end{tabular}
+\caption{Evaluation proofs for $N=2^{30}$ in KB when the ideas are added one at a time, and variants. Each entry is optimised separately.}
+\label{tab:ablation}
+\end{table}
+
+\Cref{tab:ablation} separates the effects; we quote the proof-based setting with block size $483$. Removing the quadratic garbage from LaBRADOR saves \nAblG\KB. Replacing the linear garbage by the sum-check and lifting to $\FF$ saves a further \nAblS\KB; this is the structural part of the contribution. Entropy coding saves \nAblE\KB, rounding the outer commitments, the first fold and the inner commitments of the terminal level \nAblR\KB, and rounding the inner commitments of the recursive levels another \nAblI\KB. Applied to LaBRADOR without $g_{ij}$, rounding and coding alone give \nSQc\KB; the remaining \nAblStrong\KB, or \nPctStrongQ\%, are due to the structure.
+
+With $f=8$, that is, $\FF$ of size $q^8\approx2^{256}$, every field element doubles and the proof grows by \nAblFeight\KB. The term $2/\lvert\Ch\rvert$ of the knowledge error is not affected by this.
+
+\subsection{General linear relations}\label{sec:linear}
+
+\begin{figure}[t]
+\centering
+\input{gen/fig_lin.tex}
+\caption{Proof sizes for $\Rlin$ with a witness of $m$ ring elements whose coefficients have standard deviation $2^5/\sqrt{12}$, in the conventional (C) and the proof-based (P) setting with block size $438$.}
+\label{fig:lin}
+\end{figure}
+
+The tail does not depend on the first fold. \Cref{fig:lin} shows proof sizes for linear relations whose witness consists of $m=2^{12},\dots,2^{22}$ ring elements with five-bit coefficients, a range that includes the relations produced by first folds. The proofs have between \nLinLo{} and \nLinHi\KB{} in the conventional setting and are \nLinPctLo\% to \nLinPctHi\% shorter than those of LaBRADOR without $g_{ij}$, with little dependence on $m$.
+
+\subsection{Completeness}\label{sec:completeness}
+
+The honest prover has to meet two kinds of norm bounds in every level: the projection must satisfy $\norm{\mathbf p}\le\sqrt{128}\,\beta$, and the vector $\vw'$ must have norm at most $\beta'$, where the terminal level checks the norms of $\vz$ and $\ve$ instead. Both bounds enter the ranks, so they should be as small as completeness allows. LaBRADOR sets them to the expected norms~\cite[Section~5.4]{BS23}, and so do our optimised parameters. Expected norms do not give a success probability: for the projection, $\E\norm{\mathbf p}^2=128\norm{\vs}^2$ says nothing about how often $\norm{\mathbf p}^2\le128\norm{\vs}^2$; the digits and low parts in $\vw'$ are fixed by the commitments and do not change when the prover tries again; and for a structured witness the norm of $\vz$ can exceed its expectation with large probability. This section gives bounds that do not have these problems.
+
+\begin{lemma}\label{lem:mean}
+Let $c_1,\dots,c_r$ be independent and uniformly distributed in $\Ch$. For all $\mathbf v_1,\dots,\mathbf v_r\in R^n$,
+\[
+\E\,\norm{\textstyle\sum_ic_i\mathbf v_i}^2=\tau\sum_i\norm{\mathbf v_i}^2 .
+\]
+\end{lemma}
+\begin{proof}
+The automorphisms $\sigma_j$ and the multiplication by $X$ act on coefficient vectors as signed permutations, and they do not change the operator norm because $\lvert\sigma_j(c)(\zeta)\rvert=\lvert c(\zeta^j)\rvert$ and $\lvert(Xc)(\zeta)\rvert=\lvert c(\zeta)\rvert$. Hence they map $\Ch$ to itself. For uniform $c\in\Ch$ this gives $\E[c]=X\,\E[c]$, so $\E[c]=0$ as $1-X$ is invertible in $K$; and $\E[\conj(c)c]\in K$ is fixed by all $\sigma_j$, hence rational, and equal to its constant coefficient $\E\norm c^2=\tau$. By~\eqref{eq:ct}, $\norm{\sum_ic_i\mathbf v_i}^2=\sum_{i,j}\ct\bigl(\conj(c_i)c_j\ip{\conj(\mathbf v_i)}{\mathbf v_j}\bigr)$. The expectation of the terms with $i\ne j$ vanishes by independence, and that of the $i$-th diagonal term is $\tau\,\ct\ip{\conj(\mathbf v_i)}{\mathbf v_i}=\tau\norm{\mathbf v_i}^2$.
+\end{proof}
+
+\begin{lemma}\label{lem:proj}
+Let $\mathbf w\in\Z^N$ and $t>0$. Then $\Pr_{\Pi\leftarrow\chi^{256\times N}}\bigl[\norm{\Pi\mathbf w}^2>128(1+t)\norm{\mathbf w}^2\bigr]\le1/(1+128t^2)$.
+\end{lemma}
+\begin{proof}
+The coordinates $p_j=\ip{\pi_j}{\mathbf w}$ of $\Pi\mathbf w$ are independent. Since the entries of $\pi_j$ are independent and symmetric with second and fourth moment $1/2$, we have $\E p_j^2=\frac12\norm{\mathbf w}^2$ and $\E p_j^4=\frac12\sum_kw_k^4+\frac34\sum_{k\ne l}w_k^2w_l^2\le\frac34\norm{\mathbf w}^4$. Hence $\Var(p_j^2)\le\frac12\norm{\mathbf w}^4$ and $\Var(\norm{\Pi\mathbf w}^2)\le128\norm{\mathbf w}^4$. Cantelli's inequality $\Pr[X-\E X\ge\lambda]\le\Var X/(\Var X+\lambda^2)$, whose right-hand side increases with the variance, gives the claim for $X=\norm{\Pi\mathbf w}^2$ and $\lambda=128\,t\norm{\mathbf w}^2$.
+\end{proof}
+
+\paragraph{Guaranteed parameters.}
+Fix $\theta>1$ and $t>0$, and let $B$ be a bound on the norm of the witness of a level. The verifier accepts projections for $\beta=\sqrt{1+t}\,B$. After receiving $c_1,\dots,c_r$ the prover checks the joint bound
+\begin{equation}\label{eq:joint}
+\norm{\vz}^2+\norm{\ve}^2\le Q:=\theta\,\tau\,\bigl(B^2+r\kappa d\,4^{\rin-1}\bigr),
+\end{equation}
+and asks for new challenges if it fails. The bound for the next level is $B'$, where
+\begin{equation}\label{eq:bprime}
+\begin{aligned}
+B'^2={}&\tfrac{b^2}{4}(n+\kappa)d+\Bigl(\tfrac1b\sqrt Q+\tfrac12\sqrt{(n+\kappa)d}\Bigr)^2+r\kappa d\Bigl((t_1-1)\tfrac{b_1^2}{4}+T_1^2\Bigr)\\
+&+rd\Bigl((t_w-1)\tfrac{b_w^2}{4}+T_w^2\Bigr)+2\kappa_1d\,4^{\rout-1},
+\end{aligned}
+\end{equation}
+with $T_1=(q/2^{\rin+1}+\frac12)/b_1^{t_1-1}+1$ and $T_w=(q/2)/b_w^{t_w-1}+1$; terms that belong to absent parts are omitted: those with $\kappa$ in~\eqref{eq:joint} and in the first two terms of~\eqref{eq:bprime} for $\rin=0$, the last term for $\rout=0$, and the term of $\hat{\mathbf h}$ and half of the last term if the partial evaluations are sent in the clear; if $\vz$ is not decomposed, the first two terms are replaced by $Q$. In the terminal level the verifier checks~\eqref{eq:joint} in place of~\eqref{eq:terminal}, that is, $\bar\gamma^2=Q$.
+
+\begin{theorem}\label{thm:complete}
+For every witness of norm at most $B$ of a statement of $\Rlin$, in a level with the guaranteed parameters:
+\begin{enumerate}[label=(\roman*)]
+\item an attempt for the projection is accepted with probability at least $128t^2/(1+128t^2)$;
+\item an attempt for the challenges satisfies~\eqref{eq:joint} with probability at least $1-1/\theta$;
+\item if~\eqref{eq:joint} holds, then $\norm{\vw'}\le B'$.
+\end{enumerate}
+In the random oracle model the attempts are independent. Hence, if every level of a recursion is run with the bound $B'$ of the previous one, the honest prover produces an accepting proof with an expected number of at most $1+1/(128t^2)$ projections and $\theta/(\theta-1)$ vectors of challenges per level. For $t=128^{-1/2}$ and $\theta=2$ both numbers are $2$.
+\end{theorem}
+\begin{proof}
+(i) is \cref{lem:proj}, since $128\beta^2=128(1+t)B^2\ge128(1+t)\norm{\vs}^2$. For~(ii) apply \cref{lem:mean} to the vectors $\mathbf v_i=(\vs_i,\vl_i)$: the expectation of the left-hand side of~\eqref{eq:joint} is $\tau\sum_i(\norm{\vs_i}^2+\norm{\vl_i}^2)\le\tau(B^2+r\kappa d\,4^{\rin-1})$, because the coefficients of a low part are at most $2^{\rin-1}$ in absolute value; the claim follows from Markov's inequality. For~(iii), the coefficients of $\vz^{(0)}$ and $\ve^{(0)}$ are centred remainders modulo $b$ and at most $b/2$ in absolute value, which gives the first term of~\eqref{eq:bprime}, and $(\vz^{(1)},\ve^{(1)})=\frac1b\bigl((\vz,\ve)-(\vz^{(0)},\ve^{(0)})\bigr)$ gives the second. The first $t_1-1$ digits of a coefficient of $\tH_i$ are centred remainders modulo $b_1$, and the last digit is the remaining quotient; a division with centred remainder maps a bound $V$ on the absolute value to $V/b_1+\frac12$, and the coefficients of $\tH_i$ are bounded by $q/2^{\rin+1}+\frac12$, so the last digit is bounded by $T_1$. The same argument applies to the digits of the $h_i$, whose coefficients are bounded by $q/2$, and the low parts $\vd_1,\vd_2$ have coefficients of absolute value at most $2^{\rout-1}$.
+\end{proof}
+
+The first fold is treated in the same way. The digits $\vs_i$ of an arbitrary polynomial satisfy $\sum_i\norm{\vs_i}^2\le B_s^2:=mrd\bigl((\delta_0-1)b_0^2/4+T_0^2\bigr)$ with $T_0=(q/2)/b_0^{\delta_0-1}+1$; the prover asks for new challenges until $\norm{\vz}^2+\norm{\ve}^2\le\theta\tau(B_s^2+rnd\,4^{\varrho_t-1})$, and the bound for the first level of the tail follows as in~\eqref{eq:bprime}. Together with \cref{thm:pcs}(c) this gives completeness of the evaluation protocol for every polynomial, at an expected cost of two attempts in the first fold and four in every level.
+
+\paragraph{Cost.}
+Maximal absolute values are $\sqrt3$ times larger than the standard deviations of uniform digits, the factor $\theta=2$ costs half a bit, and the margin $t$ a few percent. With the shape parameters of~\cite[Table~4]{NS24} the first fold does not even admit guaranteed parameters for $N\le2^{28}$: the polynomial is split into digits whose last one has seven or eight bits, and with its maximal value the norm required of the inner commitment exceeds $q$. We therefore let the model choose between $b_0=8$ and $b_0=16$ in this setting. The resulting proofs have \nGQa, \nGQb{} and \nGQc\KB{} for $N=2^{26},2^{28},2^{30}$ at block size $483$ (\cref{tab:main}). These are bounds for every proof; since $\vz$ and $\mathbf p$ are coded according to their actual norms, proofs for witnesses below the bound are shorter (\cref{sec:impl}).
+
+\paragraph{The optimised parameters.}
+With the optimised parameters none of the three statements of \cref{thm:complete} is available: the projection is accepted about every second time for a witness at the bound and less often above it, and a witness $\vw'$ slightly longer than $\beta'$ is possible, in which case the next level simply needs more attempts for its projection. \Cref{sec:impl} reports what happens in practice for random and for structured witnesses. An intermediate option keeps the expected norms of digits and low parts and uses the bounds $2\tau\beta^2$ for $\vz$ and its analogue for $\ve$; it costs \nAblP\KB{} for $N=2^{30}$ (\cref{tab:ablation}).

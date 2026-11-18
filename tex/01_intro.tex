@@ -1,0 +1,68 @@
+\begin{abstract}
+The lattice-based polynomial commitment schemes with the shortest evaluation proofs, Greyhound and its successors Hachi and Akita, have proofs of $53$ to $68$ kilobytes, and in Greyhound all but two of them are spent on a LaBRADOR proof for a linear relation over a cyclotomic ring. LaBRADOR folds the blocks of a witness with short ring challenges and commits to a number of cross terms that is quadratic in the number of blocks. We present Whippet, a recursive argument for linear relations that folds along two axes with two kinds of challenges. A sum-check with challenges from a large field folds the positions inside the blocks; afterwards the same constraint vector applies to every block, and the fold of the blocks with short ring challenges needs only one cross term per block. The field is the subfield with $q^4$ elements of $\Z_q[X]/(X^{64}+1)$ for $q\equiv5\pmod8$: its trace turns all constraints of a level, including the constant-term constraints of the Johnson--Lindenstrauss norm proof, into one constraint over the field, and a sum-check round costs $32$ bytes. In addition, all commitments of the recursion are rounded and short vectors are entropy-coded.
+
+We prove knowledge soundness of the interactive protocol under Module-SIS for the norms of the LaBRADOR analysis. With every commitment dimensioned for these norms at $128$ bits of quantum Core-SVP hardness, an evaluation proof for a polynomial with $2^{30}$ coefficients has \nWQc\KB{} in our size model, against \nBQc\KB{} for Greyhound with LaBRADOR and \nSQc\KB{} for LaBRADOR specialised to linear relations with the same rounding and coding. With norm bounds for which we prove completeness for every polynomial, at an expected number of at most four attempts per level, it has \nGQc\KB. Under the parameter conventions that reproduce the published $53\KB$ of Greyhound it has \nWCc\KB. The model agrees to within $0.1\%$ with a reference implementation of the recursion on synthetic witnesses of full size; the first fold is not implemented. The verifier has the asymptotic complexity of that of Greyhound, and the commitment, a third smaller through rounding, stays above a kilobyte.
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+
+Polynomial commitment schemes are the cryptographic core of most succinct arguments, and lattice-based schemes are the post-quantum candidates with the shortest proofs: tens of kilobytes, where hash-based schemes need hundreds (see the measurements in~\cite{DBK26}). The schemes in question descend from LaBRADOR~\cite{BS23}, a recursive argument for dot-product constraints over $\Rq=\Z_q[X]/(X^{64}+1)$ whose proofs have about $50\KB$ almost independently of the size of the statement. Greyhound~\cite{NS24} turned it into a polynomial commitment scheme: a three-round protocol reduces the claim $f(x)=y$ for a committed polynomial with $N$ coefficients to a relation of size about $\sqrt N$ over $\Rq$, which is then proved with LaBRADOR. Its evaluation proofs have $53\KB$ for $N=2^{30}$.
+
+The work since then has improved almost everything except the proof size. Hachi~\cite{NOZ26} combines Greyhound with a sum-check and ring switching, supports multilinear polynomials, verifies $12.5$ times faster, and reports proofs of about $55\KB$. Akita~\cite{DBK26} reaches verification times of milliseconds and commitments of $128$ bytes; its proofs have $58$ to $68$ kilobytes, which according to~\cite{DBK26} matches the size of Greyhound proofs when both schemes are calibrated to the same security target, and the authors name a smaller tail among the open problems. Schemes with polylogarithmic verifiers have larger proofs~\cite{KK26,CNT26,KLNOT26}.
+
+In Greyhound, \nTailShare\% of the proof is the LaBRADOR proof at the end, the \emph{tail}. The relation that the tail proves is linear: it says that a short vector satisfies a system of linear equations over $\Rq$. LaBRADOR treats it like any other relation.
+
+\subsection{Contribution}
+
+We design a recursive argument for linear relations over $\Rq$, prove its security, and determine its proof sizes.
+
+\paragraph{Folding along two axes.}
+LaBRADOR writes the witness as $r$ blocks $\vs_1,\dots,\vs_r$ and folds them into $\vz=\sum_ic_i\vs_i$ with short challenges $c_i\in R$; the challenges have to be short because $\vz$ has to be. A linear constraint $\sum_i\ip{\vPhi_i}{\vs_i}=b$ whose coefficient vectors differ from block to block does not survive this fold: checking it on $\vz$ takes the $(r^2+r)/2$ cross terms $\ip{\vPhi_i}{\vs_j}+\ip{\vPhi_j}{\vs_i}$, the garbage polynomials, to which the prover commits and which make up much of the next witness. We fold the other axis first. A sum-check over the positions inside a block, with challenges $\rho$ from a field with $2^{128}$ elements, reduces the constraint to $r$ values $h_i=\ip{\vE}{\vs_i}$ for a vector $\vE$ that depends only on $\rho$. Now the same vector applies to every block, the constraint commutes with the fold, $\ip{\vE}{\sum_ic_i\vs_i}=\sum_ic_ih_i$, and $r$ cross terms suffice (\cref{fig:folds}). The assignment of challenges to axes is the point: large challenges do no harm on the positions, where nothing has to stay short, and short challenges are kept for the blocks, where the norm is at stake. In the first fold of Greyhound this structure comes for free from the tensor structure of polynomial evaluation; the sum-check provides it at every level. With ranks and numbers of digits held fixed, the next witness has $O(m/r+r)$ ring elements instead of $O(m/r+r^2)$, so that a level shrinks a witness of length $m$ to the order of $m^{1/2}$ instead of $m^{2/3}$.
+
+\paragraph{Constraints over a subfield.}
+The sum-check is affordable because its messages are small. For moduli $q\equiv5\pmod8$, which LaBRADOR uses because short elements of $\Rq$ are then invertible, the subring $\FF=\Z_q[X^8+X^{-8}]$ of $\Rq$ is a field with $q^4\approx2^{128}$ elements. Such subfields and their traces are not new; Hachi works with them~\cite{NOZ26}. What we add is their use inside the argument (\cref{sec:field}). The trace $\Theta\colon\Rq\to\FF$ is $\FF$-linear, and composed with a coordinate map it gives the constant coefficient. Random linear combinations therefore merge all constraints of a level into a single $\FF$-valued one, whose sum-check has tables with values in $\Rq$ and messages of two elements of $\FF$, or $32$ bytes, per round. The same field takes care of the norm proof: random projections produce constraints on constant coefficients, which LaBRADOR lifts to the ring by sending four ring elements per level, about one kilobyte; lifted to $\FF$, they cost $48$ bytes.
+
+\paragraph{Rounding and coding.}
+Every commitment is sent without its low-order bits, and the dropped parts, which are short, become part of the next witness or are recomputed by the verifier; binding holds under Module-SIS in normal form for the same norms as before (\cref{lem:binding}). The projections and the final opening are entropy-coded, with a length bound that depends only on the norm that the verifier checks (\cref{lem:coding}).
+
+\paragraph{Analysis.}
+A level is a knowledge-sound reduction between linear relations under Module-SIS, for the norm of the LaBRADOR theorem and with knowledge error $2^{-122}$ (\cref{thm:level}). For the commitment and the first fold of Greyhound followed by $\lambda$ levels we obtain a binding commitment with a knowledge-sound interactive evaluation protocol whose knowledge error is $2/\lvert\Ch\rvert+\lambda\varepsilon_0<2^{-119}$ (\cref{thm:pcs}). LaBRADOR and its successors choose their norm bounds from expected norms, and completeness is heuristic. We give a second set of parameters with bounds that hold for every witness, and prove that the honest prover then succeeds after an expected number of at most two attempts for the projection and two for the challenges in every level (\cref{thm:complete}). We do not prove the security of the non-interactive protocol; \cref{sec:fs} states what would be needed.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}llr@{}}
+\toprule
+ & setting & proof\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Reported sizes}}\\
+Greyhound~\cite{NS24} & as published & $53$\\
+Akita~\cite{DBK26} & $128$ bits quantum & $64.6^{\,*}$\\
+Greyhound, recalibrated in~\cite{DBK26} & $128$ bits quantum & $66$--$67^{\,*}$\\
+\midrule
+\input{gen/tab_head.tex}
+\bottomrule
+\end{tabular}
+\caption{Evaluation proofs for polynomials with $N=2^{30}$ coefficients of $32$ bits, without the commitment. The lower part is computed with the size model of \cref{sec:eval}, in units of $1024$ bytes; the three settings are defined in \cref{sec:model}. $^*$Sizes from~\cite{DBK26} are in units of $1000$ bytes (revision of 15 October 2026); the first is $63.1$ in our unit.}
+\label{tab:head}
+\end{table}
+
+\paragraph{Sizes.}
+\Cref{tab:head} summarises the result. Sizes of lattice-based arguments depend on the norms for which the commitments are dimensioned, and published numbers follow different conventions; we report three settings and compare within each (\cref{sec:model}). Our main setting chooses every rank for the norm that the soundness proof requires, at $128$ bits of quantum Core-SVP hardness, as in the comparison of~\cite{DBK26}. There the proof for $N=2^{30}$ shrinks from \nBQc{} to \nWQc\KB. The fairest baseline is not LaBRADOR as published but LaBRADOR without its quadratic garbage and with the same rounding and coding; against it the proof shrinks from \nSQc{} to \nWQc\KB, by \nPctStrongQ\%. If the norm bounds are in addition chosen such that completeness is proved for every polynomial, the proof has \nGQc\KB. Under the conventions that reproduce the published sizes of LaBRADOR and Greyhound, which the security proofs do not cover, it shrinks from \nBCc{} to \nWCc\KB. The tail is independent of the first fold: for linear relations with $2^{12}$ to $2^{22}$ ring elements the savings are similar (\cref{sec:linear}).
+
+\paragraph{Validation.}
+The sizes are computed from a model, as in~\cite{BS23,NS24}. To check the model we wrote a reference implementation of the prover and the verifier of the tail (\cref{sec:impl}). For synthetic witnesses of the length and norm that the first fold produces for $N=2^{30}$, the proofs it writes differ from the model by less than $0.1\%$ in all settings, and we report the numbers of attempts that the prover needed.
+
+\subsection{Limitations}
+
+The contribution is to the proof size. The verifier of the tail is linear in the statement, like that of LaBRADOR, so that evaluation proofs are verified with the asymptotic complexity of Greyhound, about $\sqrt N$, and not in the milliseconds of Akita; we have not measured verification times. The commitment shrinks by a third through rounding but stays above a kilobyte. The protocol is not zero-knowledge, and its non-interactive version is not covered by a proof. The first fold is modelled but not implemented, so that the experiments say nothing about witnesses that come from actual polynomials; this is the main gap between our evidence and the claim about polynomial commitments. The baselines are models of LaBRADOR and Greyhound, not their implementations; with one exception they are within $2\%$ of the published sizes, and about $5\%$ above the size that~\cite{DBK26} reports for recalibrated Greyhound (\cref{sec:model}). Finally, the gap between the settings is not specific to this work: our model matches the sizes published for LaBRADOR and Greyhound only under conventions that the security proofs do not cover, and \cref{prop:weak} shows that one of these conventions cannot be justified by a proof of the known kind.
+
+\subsection{Related work}
+
+\paragraph{Lattice-based polynomial commitments.}
+Earlier lattice-based schemes had considerably larger proofs~\cite{AFLN24,CMNW24,HSS24}. Greyhound~\cite{NS24} was the first with proofs of tens of kilobytes, and Hachi, Akita, Grand Danois and Maltese build on it or compose with it~\cite{NOZ26,DBK26,KK26,CNT26}. The line of work starting with~\cite{KLNO24} obtains succinct verification by structured projections and sum-checks~\cite{KLNO25,KLOT25,KLNOT26}, at larger proof sizes. Jindo and LaBinius target client-side proving and binary fields~\cite{HLSS26,OS26}.
+
+\paragraph{Sum-checks and fields in lattice arguments.}
+Sum-check protocols over rings or extension fields appear in lattice-based folding~\cite{BC25}, in~\cite{KLOT25}, and in Hachi and Akita, where they reduce the work of the verifier or prove evaluation claims; Hachi also reduces statements over extension fields to statements over $\Rq$ and uses subfields of the ring with their traces. Our use is different in purpose: the sum-check is applied to one axis of the witness so that the fold of the other axis needs no quadratic number of cross terms, and the field aggregates and lifts the constraints of the argument itself. To our knowledge neither the replacement of the linear garbage polynomials by a sum-check nor the lifting of projection constraints to a subfield has been described.
+
+\paragraph{Encodings.}
+Dropping low-order bits is standard in lattice signatures~\cite{BG14,DKLLSSS18}; we apply it to all commitments of a recursive argument and account for the dropped parts in the recursion. Akita compresses commitments further by a chain of binary commitments and Rice-codes its final response~\cite{DBK26}.

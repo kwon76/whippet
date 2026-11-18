@@ -1,0 +1,196 @@
+\section{The Linear Tail}\label{sec:tail}
+
+\subsection{The relation}
+
+\begin{definition}\label{def:rlin}
+Let $m,K,L\ge0$ and $\beta>0$. A statement of the relation $\Rlin=\Rlin(m,K,L,\beta)$ consists of vectors $\vphi_1,\dots,\vphi_K,\vphi'_1,\dots,\vphi'_L\in\Rq^m$ and elements $b_1,\dots,b_K\in\Rq$ and $b'_1,\dots,b'_L\in\FF$. A witness is a vector $\vw\in R^m$ with
+\[
+\ip{\vphi_k}{\vw}=b_k\ \ (k\le K),\qquad\Theta\bigl(\ip{\vphi'_l}{\vw}\bigr)=b'_l\ \ (l\le L),\qquad\norm{\vw}\le\beta .
+\]
+\end{definition}
+
+The relation of LaBRADOR~\cite{BS23} contains in addition constraints with quadratic terms $\ip{\vs_i}{\vs_j}$, and constraints over $\Z_q$ in place of those over $\FF$. The latter can be lifted to $\FF$ as in \cref{sec:field}. We do not treat quadratic constraints: after one level of LaBRADOR, or after the first fold of a polynomial commitment scheme (\cref{sec:pcs}), none are left.
+
+\subsection{One level}\label{sec:level}
+
+A level reduces a statement of $\Rlin(m,K,L,\beta)$ to a statement of $\Rlin(m',K',1,\beta')$ with $m'\ll m$. Its parameters are the multiplicity $r$ and the block length $n=\lceil m/r\rceil$, the ranks $\kappa$ and $\kappa_1$, the numbers $\rin$ and $\rout$ of dropped bits, and the bases $b$, $b_1$, $b_w$ with $b_1^{t_1}\ge q/2^{\rin}$ and $b_w^{t_w}\ge q$. The witness, padded with zeros, is written as $r$ blocks $\vs_1,\dots,\vs_r\in R^n$, and vectors $\vphi\in\Rq^{rn}$ are split accordingly into $\vphi_1,\dots,\vphi_r$. Positions inside a block are indexed by $k\in\{0,1\}^\mu$ with $\mu=\lceil\log_2n\rceil$; entries at positions beyond $n$ are zero. The public parameters are uniformly random matrices $A\in\Rq^{\kappa\times n}$, $B\in\Rq^{\kappa_1\times r\kappa t_1}$ and $D\in\Rq^{\kappa_1\times rt_w}$. We write $G_1$ and $G_w$ for the maps that recompose $t_1$ digits in base $b_1$ and $t_w$ digits in base $b_w$, and $G^{-1}$ for the decompositions into centred digits. For $\rho\in\FF^\mu$ and $k\in\{0,1\}^\mu$ let $\eq(\rho,k)=\prod_j\bigl(\rho_jk_j+(1-\rho_j)(1-k_j)\bigr)\in\FF$; since $\Rq$ is a vector space over $\FF$, a function $a\colon\{0,1\}^\mu\to\Rq$ has the multilinear extension $\tilde a(\rho)=\sum_k\eq(\rho,k)\,a(k)\in\Rq$.
+
+The level is shown in \cref{fig:level}. It has five steps.
+
+\paragraph{1. Commitments.}
+The prover computes the inner commitments $\vt_i=A\vs_i$ and keeps only their high parts $\tH_i=\hi_{\rin}(\vt_i)$ and, privately, the low parts $\vl_i=\lo_{\rin}(\vt_i)$. The digits $\that=(G_1^{-1}\tH_i)_{i\le r}$ are committed in the outer commitment $\vu_1=\hi_{\rout}(B\that)$, with low part $\vd_1=\lo_{\rout}(B\that)$.
+
+\paragraph{2. Norm.}
+As in~\cite{BS23}, the verifier sends a projection matrix $\Pi\leftarrow\chi^{256\times rnd}$ with rows $\pi_1,\dots,\pi_{256}$, viewed as vectors in $R^{rn}$; the prover answers with $\mathbf p=\Pi\,\vecc(\vs)\in\Z^{256}$, and the verifier checks $\norm{\mathbf p}\le\sqrt{128}\,\beta$. By~\eqref{eq:ct}, $p_j=\ct(\ip{\conj(\pi_j)}{\vs})$. The verifier sends $\omega^{(1)},\dots,\omega^{(\kq)}\in\Z_q^{256}$, which define the $\Z_q$-constraints $\ct(\ip{\vpsi_k}{\vs})=\ip{\omega^{(k)}}{\mathbf p}$ with $\vpsi_k=\sum_j\omega^{(k)}_j\conj(\pi_j)$, and the prover lifts them: it sends $y_k=\Theta(\ip{\vpsi_k}{\vs})\in\FF$ without the coordinate $\tau_0(y_k)=\ip{\omega^{(k)}}{\mathbf p}$.
+
+\paragraph{3. Aggregation.}
+The verifier sends $\alpha_k\in\Rq$ for $k\le K$, $\xi_l\in\FF$ for $l\le L$ and $\nu_k\in\FF$ for $k\le\kq$. With
+\begin{equation}\label{eq:agg}
+\vPhi=\sum_{k\le K}\alpha_k\vphi_k+\sum_{l\le L}\xi_l\vphi'_l+\sum_{k\le\kq}\nu_k\vpsi_k,\qquad
+b=\sum_{k\le K}\Theta(\alpha_kb_k)+\sum_{l\le L}\xi_lb'_l+\sum_{k\le\kq}\nu_ky_k ,
+\end{equation}
+all constraints of the statement and the lifted projections are collected in the single claim
+\begin{equation}\label{eq:claim}
+\Theta\bigl(\ip{\vPhi}{\vs}\bigr)=\sum_{i\le r}\ \sum_{k\in\{0,1\}^\mu}\Theta\bigl(\Phi_{i,k}\,s_{i,k}\bigr)=b .
+\end{equation}
+
+\paragraph{4. Sum-check over the positions.}
+Prover and verifier run the sum-check protocol~\cite{LFKN92} on~\eqref{eq:claim} for the variables $k$, but not for the block index $i$. In round $j=1,\dots,\mu$ the prover sends the polynomial
+\[
+g_j(t)=\sum_{i\le r}\ \sum_{k'\in\{0,1\}^{\mu-j}}\Theta\Bigl(\tilde\Phi_i(\rho_1,\dots,\rho_{j-1},t,k')\cdot\tilde s_i(\rho_1,\dots,\rho_{j-1},t,k')\Bigr)\in\FF[t] ,
+\]
+which has degree at most $2$ because $\Theta$ is $\FF$-linear. It is sent as two elements of $\FF$, its value at $0$ and its leading coefficient; the verifier completes it from $g_j(0)+g_j(1)=v_{j-1}$, where $v_0=b$, sends $\rho_j\leftarrow\FF$ and sets $v_j=g_j(\rho_j)$. After the last round the claim is $\Theta\bigl(\sum_i\tilde\Phi_i(\rho)\,\tilde s_i(\rho)\bigr)=v$ with $v=v_\mu$. Let
+\[
+\vE=\bigl(\eq(\rho,k)\bigr)_{k<n}\in\FF^n,\qquad\Phi'_i=\tilde\Phi_i(\rho)=\ip{\vE}{\vPhi_i},\qquad h_i=\tilde s_i(\rho)=\ip{\vE}{\vs_i}\in\Rq .
+\]
+The verifier computes $\vE$ and the $\Phi'_i$ itself. The prover commits to the \emph{partial evaluations} $h_1,\dots,h_r$: it sends $\vu_2=\hi_{\rout}(D\hat{\mathbf h})$ for $\hat{\mathbf h}=(G_w^{-1}h_i)_{i\le r}$ and keeps $\vd_2=\lo_{\rout}(D\hat{\mathbf h})$. Two claims remain: the $\FF$-constraint $\Theta(\sum_i\Phi'_ih_i)=v$ on the committed values, and the $r$ claims $\ip{\vE}{\vs_i}=h_i$. The latter are $R$-constraints in which the same vector $\vE$ is applied to every block.
+
+\paragraph{5. Amortisation.}
+The verifier sends challenges $c_1,\dots,c_r\leftarrow\Ch$, and the prover computes $\vz=\sum_ic_i\vs_i$ and $\ve=\sum_ic_i\vl_i$. Then $A\vz-\ve=2^{\rin}\sum_ic_i\tH_i$ and $\ip{\vE}{\vz}=\sum_ic_ih_i$.
+
+\begin{figure}[tp]
+\centering\small
+\setlength{\tabcolsep}{0pt}
+\renewcommand{\arraystretch}{1.36}
+\fbox{\begin{minipage}{0.975\linewidth}
+\begin{tabular}{@{}L{0.47\linewidth}C{0.215\linewidth}L{0.315\linewidth}@{}}
+\multicolumn{1}{@{}c}{\textbf{Prover}\ \ $\mathcal P\bigl(\vs_1,\dots,\vs_r\bigr)$} & & \multicolumn{1}{c@{}}{\textbf{Verifier}\ \ $\mathcal V\bigl((\vphi_k,b_k)_k,(\vphi'_l,b'_l)_l\bigr)$}\\
+\hline
+$\vt_i=A\vs_i$,\ \ $\tH_i=\hi_{\rin}(\vt_i)$,\ \ $\vl_i=\lo_{\rin}(\vt_i)$ & & \\
+$\that=(G_1^{-1}\tH_i)_i$,\ \ $\vu_1=\hi_{\rout}(B\that)$,\ \ $\vd_1=\lo_{\rout}(B\that)$ & \msgr{\vu_1} & \\
+ & \msgl{\Pi} & $\Pi\leftarrow\chi^{256\times rnd}$\\
+$\mathbf p=\Pi\,\vecc(\vs)$ & \msgr{\mathbf p} & $\norm{\mathbf p}\overset{?}{\le}\sqrt{128}\,\beta$\\
+ & \msgl{\omega^{(1)},\dots,\omega^{(\kq)}} & $\omega^{(k)}\leftarrow\Z_q^{256}$\\
+$\vpsi_k=\sum_j\omega^{(k)}_j\conj(\pi_j)$,\ \ $y_k=\Theta(\ip{\vpsi_k}{\vs})$ & \msgr{(y_k)_k\ \text{without}\ \tau_0(y_k)} & $\tau_0(y_k):=\ip{\omega^{(k)}}{\mathbf p}$\\
+ & \msgl{(\alpha_k),(\xi_l),(\nu_k)} & $\alpha_k\leftarrow\Rq$,\ \ $\xi_l,\nu_k\leftarrow\FF$\\
+\multicolumn{3}{@{}c@{}}{both compute $\vPhi$ and $b$ by~\eqref{eq:agg};\quad$v_0=b$}\\[1pt]
+\multicolumn{3}{@{}c@{}}{\fbox{\begin{minipage}{0.93\linewidth}\setlength{\tabcolsep}{0pt}
+\begin{tabular}{@{}L{0.475\linewidth}C{0.23\linewidth}L{0.295\linewidth}@{}}
+\multicolumn{3}{@{}l}{\emph{for} $j=1,\dots,\mu$:}\\
+\ \ $g_j(t)$ as in step~4 & \msgr{g_j(0),\ [t^2]g_j} & $g_j(1)=v_{j-1}-g_j(0)$\\
+ & \msgl{\rho_j} & $\rho_j\leftarrow\FF$,\ \ $v_j=g_j(\rho_j)$\\
+\end{tabular}\end{minipage}}}\\[1pt]
+\multicolumn{3}{@{}c@{}}{both compute $\vE=(\eq(\rho,k))_{k<n}$ and $\Phi'_i=\ip{\vE}{\vPhi_i}$;\quad$v=v_\mu$}\\
+$h_i=\ip{\vE}{\vs_i}$,\ \ $\hat{\mathbf h}=(G_w^{-1}h_i)_i$ & & \\
+$\vu_2=\hi_{\rout}(D\hat{\mathbf h})$,\ \ $\vd_2=\lo_{\rout}(D\hat{\mathbf h})$ & \msgr{\vu_2} & \\
+ & \msgl{c_1,\dots,c_r} & $c_i\leftarrow\Ch$\\
+$\vz=\sum_ic_i\vs_i$,\ \ $\ve=\sum_ic_i\vl_i$ & & \\
+$\vz=\vz^{(0)}+b\,\vz^{(1)}$,\ \ $\ve=\ve^{(0)}+b\,\ve^{(1)}$ & & \\[2pt]
+\multicolumn{3}{@{}c@{}}{\fbox{\begin{minipage}{0.93\linewidth}\centering
+new witness\ \ $\vw'=\bigl(\vz^{(0)},\vz^{(1)},\that,\hat{\mathbf h},\ve^{(0)},\ve^{(1)},\vd_1,\vd_2\bigr)$,\ \ new statement~\eqref{eq:next} with norm bound $\beta'$
+\end{minipage}}}\\[2pt]
+\end{tabular}
+\end{minipage}}
+\caption{One level of the linear tail. In a recursive level the last box is the input of the next level; in the proof of \cref{thm:level} the prover sends $\vw'$ and the verifier checks~\eqref{eq:next}. All verifier messages are uniformly random and are derived by hashing in the non-interactive version.}
+\label{fig:level}
+\end{figure}
+
+\paragraph{The new statement.}
+The prover's remaining claim is that it knows a short vector $\vw'=(\vz^{(0)},\vz^{(1)},\that,\hat{\mathbf h},\ve^{(0)},\ve^{(1)},\vd_1,\vd_2)$ with
+\begin{equation}\label{eq:next}
+\begin{aligned}
+A\vz-\ve-2^{\rin}\textstyle\sum_ic_i\,G_1\that_i&=0, &\qquad&(\kappa\text{ $R$-constraints})\\
+\ip{\vE}{\vz}-\textstyle\sum_ic_i\,G_w\hat{\mathbf h}_i&=0, &&(1\text{ $R$-constraint})\\
+B\that-\vd_1&=2^{\rout}\vu_1, &&(\kappa_1\text{ $R$-constraints})\\
+D\hat{\mathbf h}-\vd_2&=2^{\rout}\vu_2, &&(\kappa_1\text{ $R$-constraints})\\
+\Theta\bigl(\textstyle\sum_i\Phi'_i\,G_w\hat{\mathbf h}_i\bigr)&=v, &&(1\text{ $\FF$-constraint})
+\end{aligned}
+\end{equation}
+where $\vz=\vz^{(0)}+b\vz^{(1)}$ and $\ve=\ve^{(0)}+b\ve^{(1)}$, and with $\norm{\vw'}\le\beta'$. This is a statement of $\Rlin(m',\kappa+2\kappa_1+1,1,\beta')$ with
+\begin{equation}\label{eq:mprime}
+m'=2n+r\kappa t_1+rt_w+2\kappa+2\kappa_1 .
+\end{equation}
+The verifier's work in a level is the computation of $\vPhi$ and of the $\Phi'_i$, which is linear in the size of the statement.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[font=\small,>=Stealth,x=0.62cm,y=0.5cm]
+% witness array
+\foreach \i in {0,...,4}{
+  \foreach \k in {0,...,7}{
+    \draw[fill=cZ!18] (\k,-\i) rectangle ++(1,-1);
+  }
+}
+\node at (4,0.55) {positions $k\in\{0,1\}^\mu$};
+\node[rotate=90] at (-2.0,-2.5) {blocks $i\le r$};
+\foreach \i/\l in {0/1,1/2,4/r}{\node[anchor=east,font=\footnotesize] at (-0.1,-\i-0.5) {$\vs_{\l}$};}
+\node[anchor=east,font=\footnotesize] at (-0.1,-2.9) {$\vdots$};
+% h column
+\foreach \i in {0,...,4}{\draw[fill=cSC!45] (11.6,-\i) rectangle ++(1,-1);}
+\foreach \i/\l in {0/1,1/2,4/r}{\node[font=\footnotesize] at (12.1,-\i-0.5) {$h_{\l}$};}
+\draw[->,thick] (8.4,-2.5) -- node[above,font=\footnotesize]{sum-check} node[below,font=\footnotesize]{$\rho\in\FF^\mu$} (11.3,-2.5);
+% z row
+\foreach \k in {0,...,7}{\draw[fill=cOuter!40] (\k,-7.2) rectangle ++(1,-1);}
+\node[anchor=east,font=\footnotesize] at (-0.1,-7.7) {$\vz=\sum_ic_i\vs_i$};
+\draw[->,thick] (4,-5.3) -- node[right,font=\footnotesize]{amortisation, $c_i\in\Ch$} (4,-6.9);
+% corner
+\draw[fill=gray!25] (11.6,-7.2) rectangle ++(1,-1);
+\draw[->,thick] (8.4,-7.7) -- node[above,font=\footnotesize]{$\ip{\vE}{\cdot}$} (11.3,-7.7);
+\draw[->,thick] (12.1,-5.3) -- node[right,font=\footnotesize]{$\sum_ic_i\,(\cdot)$} (12.1,-6.9);
+\node[anchor=west,font=\footnotesize,align=left] at (13.2,-2.2) {$r$ ring elements\\ $h_i=\ip{\vE}{\vs_i}$\\ with $\Theta\bigl(\sum_i\Phi'_ih_i\bigr)=v$};
+\node[anchor=west,font=\footnotesize,align=left] at (13.2,-7.7) {$\ip{\vE}{\vz}=\sum_ic_ih_i$};
+\end{tikzpicture}
+\caption{The two folds of a level. The sum-check folds the positions with challenges from $\FF$ and leaves one ring element per block; amortisation folds the blocks with short challenges from $R$. The two folds commute, which is the second row of~\eqref{eq:next}. LaBRADOR instead commits to the $(r^2+r)/2$ cross terms $\frac12(\ip{\vPhi_i}{\vs_j}+\ip{\vPhi_j}{\vs_i})$.}
+\label{fig:folds}
+\end{figure}
+
+\paragraph{Why the sum-check.}
+In LaBRADOR the aggregated linear constraint $\sum_i\ip{\vPhi_i}{\vs_i}=b$ is checked on $\vz$ through $\sum_ic_i\ip{\vPhi_i}{\vz}=\sum_{i,j}c_ic_jh_{ij}$, which requires commitments to the $(r^2+r)/2$ cross terms $h_{ij}$, each a uniformly random element of $\Rq$; for quadratic constraints there is a second family $g_{ij}=\ip{\vs_i}{\vs_j}$ of the same size. The cross terms exist because every block has its own constraint vector $\vPhi_i$. In the first fold of Greyhound~\cite{NS24} the constraint vector is the same for all blocks, and only $r$ values are needed. The sum-check brings an arbitrary linear constraint into this form at a cost of $2\mu$ elements of $\FF$, about $0.4\KB$ per level (\cref{fig:folds}). The block index must not be included in the sum-check: the blocks have to be folded with short challenges for the norm of $\vz$ to stay small, whereas on the positions nothing has to stay short and challenges from a large field are harmless.
+
+The effect on the recursion can be read off~\eqref{eq:mprime}. With ranks and numbers of digits treated as constants, the next witness has $O(m/r+r)$ ring elements, against $O(m/r+r^2)$ in LaBRADOR (\cref{tab:level}); the best multiplicity is $r\approx m^{1/2}$ instead of $r\approx m^{1/3}$, and a level reduces the length of the witness to the order of $m^{1/2}$ instead of $m^{2/3}$. This is only a guide, since ranks and digits change from level to level, but it explains why the recursion reaches a short witness in fewer levels and with a shorter last witness (\cref{sec:bytes}).
+
+\subsection{Security}
+
+\begin{theorem}\label{thm:level}
+Consider the protocol of \cref{fig:level} in which the prover sends $\vw'$ as its last message and the verifier accepts if $\norm{\mathbf p}\le\sqrt{128}\,\beta$ and $\vw'$ is a witness of~\eqref{eq:next} for the norm bound~$\beta'$. Suppose that $\sqrt{128/30}\,\beta\le q/125$ and that the following problems are hard: $\nfsis_{\kappa_1,r\kappa t_1,2\beta'}$ for $B$, $\nfsis_{\kappa_1,rt_w,2\beta'}$ for $D$, and $\nfsis_{\kappa,n,8T(b+1)\beta'}$ for $A$. Then the protocol is knowledge sound for $\Rlin(m,K,L,\sqrt{128/30}\,\beta)$ with knowledge error
+\[
+\varepsilon_0=\varepsilon_{\mathrm{JL}}+q^{-\kq}+\frac{2\mu+1}{\lvert\FF\rvert}+\frac{2}{\lvert\Ch\rvert} .
+\]
+An honest execution on a witness of $\Rlin(m,K,L,\beta)$ is accepted whenever $\norm{\vw'}\le\beta'$ and $\norm{\mathbf p}\le\sqrt{128}\,\beta$.
+\end{theorem}
+
+The proof is in \cref{app:proof}. It follows the proof of~\cite[Theorem~5.1]{BS23}: weak openings $\vs^*_i$ of the inner commitments are extracted by rewinding the last challenge, and the response of the prover is shown to be of the form $\vz=\mathbf y+c_i\vs^*_i$ with $\mathbf y$ independent of $c_i$. The second row of~\eqref{eq:next} is then linear in $c_i$ and forces $h_i=\ip{\vE}{\vs^*_i}$; in~\cite{BS23} the corresponding equation is quadratic and forces the diagonal cross terms. The remaining steps are those of a sum-check and of \cref{lem:agg}. The norm for which $A$ has to be binding is the first of the two norms in~\cite[Theorem~5.1]{BS23}; the second one is not needed because there are no quadratic terms. For $q\approx2^{32}$, $\mu\le13$ and $f=4$ the knowledge error is at most $2^{-122.6}$.
+
+\paragraph{Completeness.}
+The relations~\eqref{eq:next} hold for the honest prover by construction, so completeness is a matter of two norms, and \cref{thm:level} says nothing about how often they are small enough. A prover whose projection or whose vector $\vw'$ is too long changes a nonce in the Fiat--Shamir transformation, which gives new challenges $\Pi$ or $c_1,\dots,c_r$, and tries again; the digits and low parts in $\vw'$ do not depend on these challenges and are not changed by a new attempt. We use two kinds of parameters. The \emph{optimised} parameters follow~\cite{BS23}: $\beta'$ is computed from the expected norms of $\vz$, of the digits and of the low parts (\cref{app:model}), and completeness is heuristic. The \emph{guaranteed} parameters of \cref{sec:completeness} use bounds that hold for every witness, and for them the number of attempts is bounded in expectation (\cref{thm:complete}).
+
+\subsection{The terminal level and the recursion}\label{sec:terminal}
+
+\paragraph{Partial evaluations in the clear.}
+If $r$ is small, sending $h_1,\dots,h_r$ costs less than committing to them. The prover then sends the $h_i$ instead of $\vu_2$, the verifier checks $\Theta(\sum_i\Phi'_ih_i)=v$ directly, and the fourth and fifth row of~\eqref{eq:next} disappear, as do $\hat{\mathbf h}$ and $\vd_2$; the second row becomes $\ip{\vE}{\vz}=\sum_ic_ih_i$ with a public right-hand side.
+
+\paragraph{The terminal level.}
+In the last level nothing is committed twice: the prover sends the high parts $\tH_1,\dots,\tH_r$ of the inner commitments instead of $\vu_1$, the partial evaluations $h_i$ in the clear, and finally $\vz$. The verifier checks $\Theta(\sum_i\Phi'_ih_i)=v$, $\ip{\vE}{\vz}=\sum_ic_ih_i$ and
+\begin{equation}\label{eq:terminal}
+\norm{\vz}\le\gamma,\qquad\norm{\ve}\le\gamma_e\quad\text{for}\quad\ve:=A\vz-2^{\rin}\textstyle\sum_ic_i\tH_i\bmod q .
+\end{equation}
+The low part is not sent; the verifier recomputes it. This is the last level of~\cite[Section~5.6]{BS23} without garbage polynomials and with rounded commitments. The statement and the proof of \cref{thm:level} carry over with $\bar\gamma=(\gamma^2+\gamma_e^2)^{1/2}$ in place of $(b+1)\beta'$: the terminal level is knowledge sound if $\nfsis_{\kappa,n,8T\bar\gamma}$ is hard. The proof uses only the joint bound $\norm{(\vz,\ve)}\le\bar\gamma$, so the verifier may check this single inequality instead of the two in~\eqref{eq:terminal}; the guaranteed parameters do so.
+
+\paragraph{Recursion.}
+A proof consists of $\lambda-1$ levels as in \cref{fig:level}, each applied to the statement and witness produced by the previous one, and a terminal level. Since the extractor of a level returns a witness with slack $\sqrt{128/30}$, the hardness assumptions of \cref{thm:level} for a level that is followed by another one have to hold with $\sqrt{128/30}\,\beta'$ in place of $\beta'$. Under these assumptions the composition is knowledge sound with knowledge error at most $\lambda\varepsilon_0$, by the composition of proofs of knowledge used in~\cite{BS23}. \Cref{tab:level} compares a level with a level of LaBRADOR.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+ & LaBRADOR~\cite{BS23} & this work\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{sent in a level (bits)}}\\
+outer commitments & $2\kappa_1d\log_2q$ & $2\kappa_1d\,(\log_2q-\rout)$\\
+projection $\mathbf p$ & $256$ integers & $256$ integers, coded\\
+lifting & $\kq\,d\log_2q$ & $\kq\,(f-1)\log_2q$\\
+sum-check & -- & $2\mu f\log_2q$\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{next witness (elements of $R$)}}\\
+amortised opening $\vz$ & $2n$ & $2n$\\
+inner commitments & $r\kappa t_1$,\ \ $t_1\approx\log_{b_1}q$ & $r\kappa t_1$,\ \ $t_1\approx\log_{b_1}(q/2^{\rin})$\\
+cross terms & $(r^2+r)(t_1+t_2)/2$ & $rt_w$\\
+low parts & -- & $2\kappa+2\kappa_1$\\
+\midrule
+norm for the rank $\kappa$ & $\max\{8T(b+1)\beta',\,\dots\}$ & $8T(b+1)\beta'$\\
+norm for the rank $\kappa_1$ & $2\beta'$ & $2\beta'$\\
+\bottomrule
+\end{tabular}
+\caption{A recursive level of LaBRADOR and of the linear tail; $t_2$ is the number of digits of a quadratic garbage polynomial. For $d=64$, $f=4$ and $q\approx2^{32}$ the lifting costs $1024$ bytes and $48$ bytes, respectively, and the sum-check $32\mu$ bytes, which is $384$ bytes for $\mu=12$.}
+\label{tab:level}
+\end{table}

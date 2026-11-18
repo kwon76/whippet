@@ -1,0 +1,62 @@
+\section{Reference Implementation}\label{sec:impl}
+
+We implemented the non-interactive prover and verifier of the linear tail in Python with NumPy: arithmetic in $\Rq$ for $q=2^{32}-99$ and in $\FF$, the trace $\Theta$, rounded commitments, the projection with its lifting, aggregation, the sum-check with ring-valued tables, the three kinds of levels of \cref{sec:terminal}, a range coder~\cite{WNC87} with a discretised Gaussian model for $\mathbf p$ and $\vz$, and a fixed-radix packing of high parts. Challenges are derived with SHAKE-256 from the transcript. The prover varies a one-byte nonce until the projection is accepted and, in the terminal level and in all levels of the guaranteed setting, until the norm bound on $(\vz,\ve)$ holds; it records the number of attempts. All parameters of a run, that is, the shape of the recursion, the ranks, the bases and the norm bounds, are taken from the output of the size model.
+
+\paragraph{Scope.}
+The implementation covers the tail. The first fold is not implemented, and the inputs of the experiments are synthetic: a witness with the length and the norm bound of the relation~\eqref{eq:gh-system} for $N=2^{30}$, two random $R$-constraints and one random $\FF$-constraint. The experiments therefore check the proof format, the byte counts of the model and the behaviour of the honest prover on such inputs. They do not show that witnesses produced from polynomials by the first fold have the norms that the optimised parameters assume; for the guaranteed parameters this follows from \cref{thm:complete}, for the others it remains to be tested. The number of constraints does not affect the size of a proof, but it does affect the work of the verifier, and the code is written for clarity; its running times, a few minutes for the prover and for the verifier, say nothing about the verification time of a polynomial commitment scheme.
+
+\paragraph{Sizes.}
+\Cref{tab:impl} compares the proofs written by the implementation with the model. In the conventional and proof-based settings the witness has independent uniform coefficients and norm \nFullFill$\,\beta$, and the measured sizes are within \nFullDev\% of the model; the differences are nonces, length fields and the termination of the coder. In the guaranteed setting the model gives an upper bound: the witness of the first level has norm \nFullGFill$\,B$, but the witnesses of the later levels are well below their guaranteed bounds, so that $\vz$ and the projections are coded with fewer bits, and the proof has $\nFullGBytes$ bytes where the bound is $\nFullGModel$.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{2.9pt}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{conventional, $438$} & \multicolumn{2}{c}{proof-based, $438$} & \multicolumn{2}{c}{proof-based, $483$} & \multicolumn{2}{c}{guaranteed, $483$}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(l){8-9}
+bytes & meas. & model & meas. & model & meas. & model & meas. & bound\\
+\midrule
+\input{gen/tab_impl.tex}
+\bottomrule
+\end{tabular}
+\caption{Proofs of the linear tail for synthetic witnesses of the size that the first fold produces for $N=2^{30}$: bytes written by the reference implementation and bytes predicted by the model, without challenge seeds. The first fold would add the commitment $\mathbf v$ and $12$ bytes.}
+\label{tab:impl}
+\end{table}
+
+\paragraph{Attempts and norms.}
+\Cref{tab:stats} lists, for each level of three of these runs, the norm of the witness relative to its bound and the numbers of attempts. With the optimised parameters the witnesses of the later levels have norms between \nFillLo{} and \nFillHi{} times the bound predicted from expected norms, the projection needed up to \nJlMaxOpt{} attempts, and the challenges of the terminal level up to \nCMaxOpt. With the guaranteed parameters all witnesses are below their bounds, as they must be, by a wide margin for the random witness and also for the witness in which all coefficients are equal.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}crrrrrrrrr@{}}
+\toprule
+ & \multicolumn{3}{c}{proof-based, random} & \multicolumn{3}{c}{guaranteed, random} & \multicolumn{3}{c}{guaranteed, all equal}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(l){8-10}
+level & $\norm{\vw}/\beta$ & $\Pi$ & $c$ & $\norm{\vw}/B$ & $\Pi$ & $c$ & $\norm{\vw}/B$ & $\Pi$ & $c$\\
+\midrule
+\input{gen/tab_stats.tex}
+\bottomrule
+\end{tabular}
+\caption{Full-size runs at block size $483$: norm of the witness of each level relative to the norm bound of the level, and numbers of attempts for the projection ($\Pi$) and for the challenges ($c$). In the proof-based setting only the terminal level repeats the challenges.}
+\label{tab:stats}
+\end{table}
+
+Random witnesses are the favourable case for expected norms. \Cref{tab:retries} repeats the experiment \nRetRuns{} times on a small instance for three kinds of witnesses with norm close to the bound: random coefficients, all coefficients equal, and a single non-zero coefficient in every ring element. With the optimised parameters the prover needs \nRetOptUni{} attempts per proof on average for random witnesses, where the minimum is two per level, and for the witness with equal coefficients it needs up to \nRetOptConstMax{} attempts and gives up in \nRetOptConstFail{} of \nRetRuns{} runs, after $250$ attempts in one level. Such a witness is the worst case for the norm of $\vz$: all blocks are equal, so that $\vz=(\sum_ic_i)\,\vs_1$. With the guaranteed parameters all runs succeed, with at most \nRetGcMax{} attempts per proof.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+parameters & witness & proofs & attempts (mean) & attempts (max)\\
+\midrule
+\input{gen/tab_retries.tex}
+\bottomrule
+\end{tabular}
+\caption{Honest prover on an instance with $\nRetM$ ring elements and $\beta=2^{\nRetLogB}$ at block size $483$, \nRetRuns{} runs per row with witnesses of norm at least $0.96\beta$: number of runs that end with an accepted proof, and number of attempts per accepted proof, counting every projection and every vector of challenges. The recursions have \nRetLevOpt{} and \nRetLevGc{} levels.}
+\label{tab:retries}
+\end{table}
+
+\paragraph{Tests.}
+On \nTestN{} smaller instances with $900$ to $6000$ ring elements, which together cover the settings, levels with committed and with clear partial evaluations, with and without decomposition of $\vz$, and runs without rounding, all proofs verify and their sizes are within \nTestDev\% of the model. In each of these runs the verifier rejects the proof after each of $60$ random single-bit flips, after truncation and after appending a byte, and it rejects a correct proof for a statement in which one $R$-constraint or the $\FF$-constraint has been changed. Rejecting every bit flip requires canonical encodings: the verifier re-encodes the decoded vectors $\mathbf p$ and $\vz$ and compares.
