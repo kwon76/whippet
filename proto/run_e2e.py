@@ -172,6 +172,10 @@ def one_run(job):
     ufile, pfile = os.path.join(SCRATCH, "u_" + tag), os.path.join(SCRATCH, "p_" + tag)
     open(ufile, "wb").write(u)
     open(pfile, "wb").write(proof)
+    del st, wr, pp, f                         # release the prover's memory before the verifier starts
+    pcs.T.STATS.clear()
+    import gc
+    gc.collect()
     v = _verify_child(logN, var, x, y, ufile, pfile)
     os.remove(ufile)
     os.remove(pfile)
