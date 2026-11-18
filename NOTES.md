@@ -166,3 +166,8 @@ Results as they come in (details in proto/e2e.json, summary: python3 proto/e2e_s
 - Fix: gh.first_fold uses the mean square ((d0-1) b0^2/12 + T^2/3)/d0 (also in the rule for Dt).  Recomputed the 30
   affected entries of final.json (gh26/gh28, not gc) with run_final.py; old values in results_prev/final.json.
   The two pre-fix e2e runs are kept in e2e.json['model_bug'].
+- Rank fixed point (prompt: report if it does not converge): with the corrected digit norm, gh.instance(28, rounded,
+  'A') at block size 438 oscillates between (n, n1) = (22, 9) with Du = 11 (beta1 = 106108, needs n1 = 8) and (22, 8)
+  with Du = 12 (beta1 = 110851, needs n1 = 9): Du is chosen from n1 and changes beta1.  gh.instance now takes the
+  largest ranks of a cycle and checks that they suffice for the resulting beta1 ((22, 9), Du = 11).  This is the only
+  instance (N = 2^18..2^30, C/A, 438/483, rounded or not) with a cycle; all others converge as before.

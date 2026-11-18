@@ -72,17 +72,30 @@ def first_fold(logN, rounded, n=18, n1=7, TG=64, eta=0.10):
 def instance(logN, rounded, acc):
     if acc == 'C':
         return first_fold(logN, rounded)
+    def need(g):
+        if acc == 'A':
+            return P.rank(8*P.T*(2.0**g['lb'] + 1)*P.SL*g['beta']), P.rank(2*P.SL*g['beta'])
+        return P.rank(8*P.T*g['gbar']), P.rank(2*g['beta'])
     n, n1 = 18, 7
+    seen = []
     for _ in range(50):
         g = first_fold(logN, rounded, n=n, n1=n1, TG=P.TAU)
-        if acc == 'A':
-            nn1 = P.rank(2*P.SL*g['beta'])
-            nn = P.rank(8*P.T*(2.0**g['lb'] + 1)*P.SL*g['beta'])
-        else:
-            nn1 = P.rank(2*g['beta'])
-            nn = P.rank(8*P.T*g['gbar'])
+        nn, nn1 = need(g)
         if (nn, nn1) == (n, n1):
             return g
+        if (n, n1) in seen:
+            # a cycle: the number Du of dropped bits of the outer commitments depends on n1 and changes beta, which
+            # changes the rank n1 that is needed (e.g. N = 2^28, block size 438: (22, 9) <-> (22, 8)).  Take the
+            # largest ranks of the cycle and check that they are sufficient for the resulting beta.
+            cyc = seen[seen.index((n, n1)):]
+            n, n1 = max(c[0] for c in cyc), max(c[1] for c in cyc)
+            g = first_fold(logN, rounded, n=n, n1=n1, TG=P.TAU)
+            nn, nn1 = need(g)
+            if nn <= n and nn1 <= n1:
+                g['rank_cycle'] = cyc
+                return g
+            break
+        seen.append((n, n1))
         n, n1 = nn, nn1
     raise RuntimeError("ranks do not converge")
 
