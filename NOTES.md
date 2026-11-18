@@ -124,6 +124,8 @@ Interpretations chosen where the specification leaves room (none contradicts Thm
 Observation before the large runs (model only): the share of ||z1||^2 (the high part of z in base b, the only part of
 the first-fold witness whose norm depends on the challenges and on the structure of f) in beta_1^2 is
 0.01/0.02/0.03/0.06 for N = 2^18/20/22/24, 0.11 for 2^26, 0.45 for 2^28 and 0.30 for 2^30 (r grows, b stays 2^6 or 2^7).
+(After the correction of the digit norm below: 0.08 for 2^26 and 0.19 for 2^28; the earlier 0.11/0.45 came from the
+underestimated beta_1.)
 For small N the witness norm is dominated by z0 (uniform in [-b/2, b/2)), t_hat and w_hat, so small runs are
 insensitive to structured polynomials; N = 2^28 is the most sensitive size.
 Predictions (written before the runs):
