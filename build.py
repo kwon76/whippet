@@ -70,6 +70,12 @@ num["PctStrongQ"] = str(round(pct(W(30, "Q"), B(30, "Q", "linall"))))
 gp = [100.0 * (G(n)["total"] / W(n, "Q") - 1) for n in NS]
 num["GPctLo"], num["GPctHi"] = str(floor(min(gp))), str(ceil(max(gp)))
 num["BQcDec"] = f1(B(30, "Q") * 1.024)
+# values of the model before the correction of the digit norm for b0^d0 < q (results_prev/final.json)
+FOLD = json.load(open(os.path.join(ROOT, "results_prev", "final.json")))
+oldtot = lambda k: FOLD[k]["total"] - (YPRIME if k.startswith("base_gh") else 0.0)
+num["BCaOld"], num["BCbOld"] = f1(oldtot("base_gh26_C_438_base")), f1(oldtot("base_gh28_C_438_base"))
+num["WQaOld"], num["WQbOld"] = f1(oldtot("whip_gh26_A_483_full")), f1(oldtot("whip_gh28_A_483_full"))
+num["BQaOld"], num["BQbOld"] = f1(oldtot("base_gh26_A_483_base")), f1(oldtot("base_gh28_A_483_base"))
 e = ent("base", "gh", 30, "C", "base")
 num["TailShare"] = str(round(100 * e["tail"] / (e["total"] - YPRIME)))
 coms = [ent("whip", "gh", n, s, "full")["com"] for s in "CAQ" for n in NS]
