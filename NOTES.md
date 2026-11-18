@@ -173,3 +173,36 @@ Results as they come in (details in proto/e2e.json, summary: python3 proto/e2e_s
   with Du = 12 (beta1 = 110851, needs n1 = 9): Du is chosen from n1 and changes beta1.  gh.instance now takes the
   largest ranks of a cycle and checks that they suffice for the resulting beta1 ((22, 9), Du = 11).  This is the only
   instance (N = 2^18..2^30, C/A, 438/483, rounded or not) with a cycle; all others converge as before.
+
+## Final state of the revision (2026-11-18) — what was done, what was found, what remains
+Done
+- Implementation: proto/pcs.py (commitment, first fold, lifted evaluation claim, hand-over to the tail on one
+  Fiat-Shamir transcript), proto/fastring.py (exact BLAS arithmetic, 10-40x faster, bit-identical), tail.py fast paths
+  and pre-bound transcript (old behaviour unchanged: run_tests, run_retries and run_full give the same proofs).
+- Experiments: proto/e2e.json; N = 2^18..2^22: 8 kinds x 20 runs x {proof-based, guaranteed}; 2^24: 8 x 10 x 2;
+  2^26: uniform, const, maxdig_eq x 2 x 2; 2^28: uniform x 2 x 2, const x 2 x 2, maxdig_eq x 2 x 2, blockrep,
+  period7, maxdig (1-2 each).  Negative tests for 2^18..2^24, both settings: all tampered proofs/claims rejected.
+  Re-runs of run_tests, run_retries, run_full (5 keys) with the final code; 20 repeated full-size tail runs
+  (proto/full_Q_rep.json).
+- Paper: Section 7 rewritten (scope, end-to-end runs, structured polynomials, tail at full size), Appendix D (levels,
+  time, memory), abstract, introduction (validation, limitations), Sections 5.2, 6.1, 6.6, 8; all numbers from JSON.
+Findings
+1. Sizes: the complete protocol writes proofs within -0.14..+0.09 % of the model (proof-based), first fold +2 bytes,
+   commitment +1 byte; guaranteed proofs 1.1-1.8 % below the bound.
+2. Model error (fixed): digit norm of the first fold for b0^d0 < q (N = 2^26, 2^28); found because a uniform
+   polynomial failed at 2^26.  Corrected model changes sizes at 2^26/2^28 by at most 1.1 KB (this work and baselines);
+   N = 2^30 unchanged.  Rank fixed point at 2^28/438/A cycles; resolved by the larger ranks.
+3. Completeness of the proof-based (expected-norm) parameters fails for some structured polynomials: 8 failures, all
+   for polynomials with extremal digits (maxdig, maxdig_eq), at N = 2^22 (1/20 maxdig_eq), 2^24 (3/10 maxdig, 1/10
+   maxdig_eq), 2^26 (1/2 maxdig_eq), 2^28 (1/2 maxdig_eq, 1/1 maxdig); first-fold witness 1.13-1.40 x beta_1.
+   ||(z,e)||^2 reached 18.4 x its expectation (heavy tail of (sum c_i) s_1 when blocks share digits); constant
+   polynomials and equal blocks reached 6 x without failing.  Uniform polynomials: ||w1||/beta1 = 0.995..1.009.
+   The baselines use the same rule for beta_1, so the same holds for them as modelled.
+4. Guaranteed parameters: every run succeeded; first-fold witness <= 0.66 B_1; at most 3 first-fold challenge vectors.
+Not done / remaining
+- No end-to-end run at N = 2^30 (memory and time; the tail alone was run at that size).  Clean single-run timings on
+  an idle machine were not measured: the times in Appendix D were taken with other runs on the remaining cores.
+- No comparison of verification times with other schemes (no same-machine measurements).
+- Possible follow-ups: bounds for the first fold that hold for every polynomial combined with expected-norm bounds in
+  the tail (not computed: it would be a new parameter set); a variance-based bound for ||z||^2 with heavy tails.
+- The container restarted three times during the runs; runs are resumable, and the lost runs were repeated.
