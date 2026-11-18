@@ -313,7 +313,7 @@ assert all(v['honest'] and v['flips'] == v['flips_rejected'] for v in ENEG.value
 assert all(all(v[k] for k in ('wrong_y', 'noncanonical_y', 'wrong_x', 'other_commitment', 'flipped_commitment',
                               'proof_for_other_point', 'truncated', 'appended', 'empty'))
            and all(v['edge_points_ok'].values()) for v in ENEG.values())
-num["EeSizes"] = ", ".join("$%s$" % pw(n) for n in ESIZES[:-1]) + " and $%s$" % pw(ESIZES[-1])
+num["EeSizes"] = ",".join(pw(n) for n in ESIZES)            # used in math mode: $N=\nEeSizes$
 num["EeNmax"] = pw(ESIZES[-1])
 num["EeNmin"] = pw(ESIZES[0])
 num["EeRuns"] = comma(sum(r['runs'] for r in ESUM.values()))
