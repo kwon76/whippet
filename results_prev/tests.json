@@ -1,0 +1,143 @@
+[
+ {
+  "m": 1500,
+  "logbeta": 12.5,
+  "acc": "A",
+  "opts": {},
+  "modes": [
+   "commit",
+   "clear/nodec",
+   "last"
+  ],
+  "ok": true,
+  "size": 28850,
+  "model": 28856,
+  "dev": -0.02,
+  "bitflips_rejected": "60/60",
+  "trunc_rejected": true,
+  "wrong_stmt_rejected": true,
+  "wrong_fstmt_rejected": true
+ },
+ {
+  "m": 1200,
+  "logbeta": 12.0,
+  "acc": "C",
+  "opts": {},
+  "modes": [
+   "commit",
+   "clear",
+   "last"
+  ],
+  "ok": true,
+  "size": 21931,
+  "model": 21925,
+  "dev": 0.03,
+  "bitflips_rejected": "60/60",
+  "trunc_rejected": true,
+  "wrong_stmt_rejected": true,
+  "wrong_fstmt_rejected": true
+ },
+ {
+  "m": 3000,
+  "logbeta": 13.0,
+  "acc": "B",
+  "opts": {},
+  "modes": [
+   "commit",
+   "clear/nodec",
+   "last"
+  ],
+  "ok": true,
+  "size": 29756,
+  "model": 29763,
+  "dev": -0.02,
+  "bitflips_rejected": "60/60",
+  "trunc_rejected": true,
+  "wrong_stmt_rejected": true,
+  "wrong_fstmt_rejected": true
+ },
+ {
+  "m": 2000,
+  "logbeta": 12.5,
+  "acc": "A",
+  "opts": {
+   "O": false,
+   "I": false,
+   "inner": false
+  },
+  "modes": [
+   "commit",
+   "clear",
+   "last"
+  ],
+  "ok": true,
+  "size": 34949,
+  "model": 34939,
+  "dev": 0.03,
+  "bitflips_rejected": "60/60",
+  "trunc_rejected": true,
+  "wrong_stmt_rejected": true,
+  "wrong_fstmt_rejected": true
+ },
+ {
+  "m": 2500,
+  "logbeta": 13.0,
+  "acc": "A",
+  "opts": {
+   "E": false
+  },
+  "modes": [
+   "commit",
+   "clear/nodec",
+   "last"
+  ],
+  "ok": true,
+  "size": 30718,
+  "model": 32287,
+  "dev": -4.86,
+  "bitflips_rejected": "60/60",
+  "trunc_rejected": true,
+  "wrong_stmt_rejected": true,
+  "wrong_fstmt_rejected": true
+ },
+ {
+  "m": 6000,
+  "logbeta": 13.5,
+  "acc": "C",
+  "opts": {},
+  "modes": [
+   "commit",
+   "commit",
+   "clear",
+   "last"
+  ],
+  "ok": true,
+  "size": 25673,
+  "model": 25683,
+  "dev": -0.04,
+  "bitflips_rejected": "60/60",
+  "trunc_rejected": true,
+  "wrong_stmt_rejected": true,
+  "wrong_fstmt_rejected": true
+ },
+ {
+  "m": 900,
+  "logbeta": 12.0,
+  "acc": "A",
+  "opts": {
+   "clear": false
+  },
+  "modes": [
+   "commit/nodec",
+   "last"
+  ],
+  "ok": true,
+  "size": 27093,
+  "model": 27110,
+  "dev": -0.06,
+  "bitflips_rejected": "60/60",
+  "trunc_rejected": true,
+  "wrong_stmt_rejected": true,
+  "wrong_fstmt_rejected": true
+ }
+]

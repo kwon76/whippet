@@ -15,7 +15,8 @@ CONF = [
     (900, 12.0, 'A', dict(clear=False)),                          # partial evaluations always committed
 ]
 rng = np.random.default_rng(7)
-allok = True
+import fastring
+allok = fastring.test(60)          # fast exact arithmetic is bit-identical with the reference routines
 for (m, lb, acc, opts) in CONF:
     res, stmt, sched, proof = run(m, lb, acc, seed=int(rng.integers(1, 10**6)), quiet=True, opts=opts)
     modes = [lv.get('wmode', 'last') + ('' if lv.get('dec', True) else '/nodec') for lv in sched]

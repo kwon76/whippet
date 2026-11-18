@@ -11,6 +11,11 @@ from math import log2, sqrt, ceil, floor
 import params as P
 
 SHAPE = {26: (3156, 333, 6, 5, 7, 5), 28: (6312, 665, 5, 6, 6, 5), 30: (12625, 1329, 4, 8, 6, 5)}
+# small sizes for the end-to-end runs of the reference implementation (not in [NS24]): m*r >= N/64 with
+# m/r close to 9.5 as in [NS24, Table 4], r = round(sqrt(N/(64*9.5))), m = ceil(N/(64 r)); b0 = 16 (delta0 = 8)
+# and digits of the commitments in base 2^6 as for N = 2^30.  The last entry (number of digits of z) is unused.
+SHAPE.update({18: (196, 21, 4, 8, 6, 5), 20: (391, 42, 4, 8, 6, 5), 22: (790, 83, 4, 8, 6, 5),
+              24: (1580, 166, 4, 8, 6, 5)})
 
 
 def first_fold(logN, rounded, n=18, n1=7, TG=64, eta=0.10):

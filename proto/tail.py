@@ -17,6 +17,7 @@ import params as P          # noqa: E402
 import wmodel as W          # noqa: E402
 import ring as R            # noqa: E402
 import coder as C           # noqa: E402
+import fastring as F        # noqa: E402
 
 Q = R.Q
 QU = R.QU
@@ -219,7 +220,7 @@ class LevelStatement:
         pos = kap + 1
         terms = []
         segs = []
-        zc = R.mul(aA[:, None, :], self.A).sum(axis=0) % QU
+        zc = F.lincomb_uniform(aA, self.A)
         zc = (zc + R.fmul_ring(self.E, aE[None, :])) % QU
         segs.append(zc)
         if dec:
@@ -233,7 +234,7 @@ class LevelStatement:
             for j in range(t1):
                 f = np.uint64((-(1 << di) * pow(b1, j, Q)) % Q)
                 seg[:, j] = (ac * f) % QU
-            seg = (seg.reshape(-1, D) + R.mul(be[:, None, :], self.Bm).sum(axis=0)) % QU
+            seg = (seg.reshape(-1, D) + F.lincomb_uniform(be, self.Bm)) % QU
             segs.append(seg)
             terms += [R.theta(R.mul(be[k], R.to_q(self.H1[k] << do))) for k in range(k1)]
         else:
@@ -248,7 +249,7 @@ class LevelStatement:
             for j in range(tw):
                 f = np.uint64(pow(bw, j, Q))
                 seg[:, j] = (((QU - ec) % QU + mp) % QU * f) % QU
-            seg = (seg.reshape(-1, D) + R.mul(ga[:, None, :], self.Cm).sum(axis=0)) % QU
+            seg = (seg.reshape(-1, D) + F.lincomb_uniform(ga, self.Cm)) % QU
             segs.append(seg)
             terms += [R.theta(R.mul(ga[k], R.to_q(self.H2[k] << do))) for k in range(k1)]
             terms.append(R.fmul(mu[0], self.claim))
@@ -338,10 +339,14 @@ def bind_statement(tr, stmt, sched):
         tr.absorb(a)
 
 
-def prove(stmt, w, sched, wr, log=print):
+def prove(stmt, w, sched, wr, log=print, tr=None):
+    """tr: a transcript to which the caller has already bound the statement (used by pcs.py, where the
+    statement of the first level is determined by the commitment, the evaluation claim and the messages
+    of the first fold); if None, a new transcript is created and bind_statement is applied."""
     del STATS[:]
-    tr = R.Transcript()
-    bind_statement(tr, stmt, sched)
+    if tr is None:
+        tr = R.Transcript()
+        bind_statement(tr, stmt, sched)
     for idx, lv in enumerate(sched):
         t0 = time.time()
         stmt, w = prove_level(idx, lv, stmt, w, tr, wr, log)
@@ -363,7 +368,7 @@ def prove_level(idx, lv, stmt, w, tr, wr, log):
     log("level %d (%s): m=%d r=%d n=%d  ||w||/beta = %.4f" % (idx + 1, mode, w.shape[0], r, n, sqrt(nw) / beta))
 
     # 1. inner commitments, rounded
-    T = np.stack([R.matvec_small(A, S[i]) for i in range(r)])               # (r, kap, 64)
+    T = F.Prepared(A).apply(S)                                              # (r, kap, 64)
     H, Lo = round_hi(T, di)
     if mode in ('last', 'open'):
         put_hi(wr, 'inner', H, di)
@@ -371,7 +376,7 @@ def prove_level(idx, lv, stmt, w, tr, wr, log):
     else:
         t1, b1, k1, do = lv['t1'], lv['b1'], lv['k1'], lv['do']
         That = digits(H, b1, t1).transpose(1, 0, 2, 3)                      # (r, t1, kap, 64)
-        U1 = R.matvec_small(Bm, That.reshape(-1, D))
+        U1 = F.Prepared(Bm).apply(That.reshape(1, -1, D))[0]
         H1, L1 = round_hi(U1, do)
         put_hi(wr, 'outer', H1, do)
         tr.absorb(H1)
@@ -457,7 +462,7 @@ def prove_level(idx, lv, stmt, w, tr, wr, log):
     if mode == 'commit':
         tw, bw = lv['tw'], lv['bw']
         What = digits(R.center(Wv), bw, tw).transpose(1, 0, 2)              # (r, tw, 64)
-        U2 = R.matvec_small(Cm, What.reshape(-1, D))
+        U2 = F.Prepared(Cm).apply(What.reshape(1, -1, D))[0]
         H2, L2 = round_hi(U2, lv['do'])
         put_hi(wr, 'outer', H2, lv['do'])
         tr.absorb(H2)
@@ -472,8 +477,8 @@ def prove_level(idx, lv, stmt, w, tr, wr, log):
         tc = tr.h.copy()
         tc.update(b"c" + bytes([nonce]))
         c = R.challenges(np.random.Generator(np.random.PCG64(int.from_bytes(tc.digest(32), "little"))), r)
-        z = mul_int(c[:, None, :], S).sum(axis=0)                           # (n, 64)
-        e = mul_int(c[:, None, :], Lo).sum(axis=0)                          # (kap, 64)
+        z = F.lincomb_small(c, S)                                           # (n, 64)
+        e = F.lincomb_small(c, Lo)                                          # (kap, 64)
         zz = float((z.astype(np.float64) ** 2).sum())
         ee = float((e.astype(np.float64) ** 2).sum())
         if 'qmax' in lv:                      # joint bound on (z, e), at every level
@@ -528,10 +533,12 @@ def prove_level(idx, lv, stmt, w, tr, wr, log):
 
 # ------------------------------------------------------------------ verifier
 
-def verify(stmt, sched, proof, log=print):
+def verify(stmt, sched, proof, log=print, tr=None):
+    """tr: see prove()."""
     rd = Reader(proof)
-    tr = R.Transcript()
-    bind_statement(tr, stmt, sched)
+    if tr is None:
+        tr = R.Transcript()
+        bind_statement(tr, stmt, sched)
     try:
         for idx, lv in enumerate(sched):
             t0 = time.time()

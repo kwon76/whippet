@@ -1,0 +1,20 @@
+instance whip_gh30_A_438_full: m = 325657 ring elements, beta = 2^16.619, 5 levels, model 37.89 KB
+witness: uniform coefficients in [-37, 37], ||w|| / beta = 0.9820
+level 1 (commit): m=325657 r=89 n=3660  ||w||/beta = 0.9820
+  prover level 1 done in 386.6s
+level 2 (commit): m=14581 r=19 n=768  ||w||/beta = 0.9943
+  prover level 2 done in 25.4s
+level 3 (commit): m=2969 r=8 n=372  ||w||/beta = 0.9967
+  prover level 3 done in 3.3s
+level 4 (clear): m=1432 r=5 n=287  ||w||/beta = 0.9918
+  prover level 4 done in 1.6s
+level 5 (last): m=502 r=4 n=126  ||w||/beta = 0.9945
+  prover level 5 done in 0.5s
+proof: 38473 bytes; prover 420 s
+  verifier level 1 done in 163.5s
+  verifier level 2 done in 13.1s
+  verifier level 3 done in 1.8s
+  verifier level 4 done in 0.7s
+  verifier level 5 done in 0.5s
+verified: True; verifier 182 s
+{"key": "whip_gh30_A_438_full", "m": 325657, "logbeta": 16.618809125908996, "fill": 0.9820256499442451, "half": 37, "levels": 5, "ok": true, "tampered_rejected": true, "size": 38473, "sizes": {"outer": 7775, "nonce": 10, "jl": 2553, "lift": 240, "sumcheck": 1504, "evals": 2304, "inner": 10081, "z": 14006}, "model": {"outer": 7768.0002008756765, "jl": 2545.8875170101487, "lift": 240.0, "sumcheck": 1504.0, "chal": 320.0, "evals": 2304.0, "inner": 10080.000660413065, "z": 14035.64458007185}, "model_total": 38797.53295837074, "seeds": 320, "tp": 419.547137260437, "tv": 181.63765740394592, "witness": "uniform", "stats": [{"level": 1, "kind": "commit", "m": 325657, "fill": 0.9820256499442451, "jl_tries": 1, "p_ratio": 0.9341140714376601, "z_ratio": 0.9836876885578745, "c_tries": 1}, {"level": 2, "kind": "commit", "m": 14581, "fill": 0.994262130751461, "jl_tries": 5, "p_ratio": 0.9808559795699135, "z_ratio": 0.9973400838765876, "c_tries": 1}, {"level": 3, "kind": "commit", "m": 2969, "fill": 0.9967352881270576, "jl_tries": 1, "p_ratio": 0.99262806431928, "z_ratio": 0.9963822845420317, "c_tries": 1}, {"level": 4, "kind": "clear", "m": 1432, "fill": 0.9918120757968777, "jl_tries": 3, "p_ratio": 0.940798692544355, "z_ratio": 0.9950093340982045, "c_tries": 1}, {"level": 5, "kind": "last", "m": 502, "fill": 0.9945462864491864, "jl_tries": 2, "p_ratio": 0.8989708703307078, "z_ratio": 0.9781900328298556, "c_tries": 2}]}

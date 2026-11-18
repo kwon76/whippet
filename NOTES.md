@@ -88,3 +88,48 @@ Done in this revision:
 - Could not re-read the Akita PDF (robots); abstract page of 2026-10-15 says 58-68 KB.  The numbers 64.6 (Akita
   direct, 2^30) agree between my earlier reading and the reviewer; recalibrated Greyhound is 67.2 in my earlier
   reading and 66.1 according to the reviewer -> paper says "66 to 67", units of 1000 bytes (reviewer).  CHECK.
+
+
+## End-to-end implementation (2026-11-18) — first fold, PCS runs on polynomials (CLAUDE_CODE_PROMPT.md)
+Code: proto/fastring.py (exact BLAS arithmetic), proto/pcs.py (commitment + first fold + tail), proto/run_e2e.py
+(-> proto/e2e.json), model/small_sched.py (-> model/small_sched.json, schedules for N = 2^18..2^24), small shapes in
+gh.SHAPE.  Old results copied to results_prev/ (also whippet_baseline.pdf, numbers_baseline.tex).
+
+Interpretations chosen where the specification leaves room (none contradicts Thm 4.2, 5.2, 6.3):
+- Coefficients in [0,q) are replaced by their centred representatives in (-q/2, q/2] before the base-b0 digits are
+  taken (the bound T_0 = (q/2)/b0^(d0-1)+1 of Section 6.6 assumes this).  Last digit = remaining quotient (tail.digits).
+- Layout s_i[k*m + j] = k-th digit of f_{i,j}, so G_{b0,m} = (I_m, b0 I_m, ..., b0^(d0-1) I_m), a_bar = G^T a.
+- Small shapes (not in [NS24]): r = round(sqrt(N/(64*9.5))), m = ceil(N/(64 r)), b0 = 16, d0 = 8, base 2^6; the
+  polynomial is padded with zero coefficients to m*r*64 (as the shapes of [NS24] for 2^26..2^30 also are).
+- Optimised setting: the model (gh.first_fold) has no bound check in the first fold, so the first fold takes the first
+  challenge vector (nonce 0); an oversized first-fold witness shows up as retries of the projection of tail level 1.
+  Guaranteed setting: retry until ||z||^2 + ||e||^2 <= qmax = theta*tau*(B_s^2 + r n d 4^(Dt-1)) (g['qmax']).
+- Digits of w_hat: table rule (wider last digit, kw = 5 for base 2^6) in the optimised setting and ceil rule (kw = 6) in
+  the guaranteed setting, exactly as gh.first_fold / gh.first_fold_gc count them.  LevelStatement needs no change:
+  tail.digits(x, base, k) with the remaining quotient as last digit realises both rules; only the bounds differ.
+- psi_x * b_i is a ring element; LevelStatement.PhiP is already ring-valued in the tail (Pt[:, 0]), so (12) is
+  LevelStatement with lv = {n: d0*m, r, kap: n, k1: n1, t1: kt, tw: kw, b = b1 = bw = 2^lb, di: Dt, do: Du, dec,
+  wmode: commit}; witness order [z0|z1|t_hat|w_hat|e0|e1|e_u|e_v] (Bm = B, Cm = D, d_1 = e_u, d_2 = e_v).  Figure 4
+  lists the parts in another order; this is notation only.
+- Fiat-Shamir: Transcript(b"whippet-pcs") absorbs the public parameters (shape, ranks, bases, Dt, Du, setting), the
+  parameters of all tail levels (as bind_statement), u, x, y; then v, the three coordinates of y_hat, the nonce and c;
+  tail.prove/verify continue on that transcript (new argument tr=; tr=None keeps the old behaviour).
+- Bytes: Writer.sizes['first_fold'] = v + 12 bytes of y_hat + 1 nonce byte.  Model for comparison: gh.own_bits minus the
+  two challenge seeds (256 bits), tail model minus 64 bytes of seeds per level, as in run_full.py.
+- The verifier rejects x, y outside [0, q).
+- fastring.py: products with 16-bit limbs in float64 (exact: every sum < 2^53, checked or guaranteed by the dtype);
+  tail.py uses it for A s_i, the outer commitments, z, e and the aggregation in LevelStatement.agg.  Bit-identical with
+  ring.mul / matvec_small / mul_int (fastring.test); WHIPPET_SLOW=1 switches back to the reference routines.
+
+Observation before the large runs (model only): the share of ||z1||^2 (the high part of z in base b, the only part of
+the first-fold witness whose norm depends on the challenges and on the structure of f) in beta_1^2 is
+0.01/0.02/0.03/0.06 for N = 2^18/20/22/24, 0.11 for 2^26, 0.45 for 2^28 and 0.30 for 2^30 (r grows, b stays 2^6 or 2^7).
+For small N the witness norm is dominated by z0 (uniform in [-b/2, b/2)), t_hat and w_hat, so small runs are
+insensitive to structured polynomials; N = 2^28 is the most sensitive size.
+Predictions (written before the runs):
+- optimised, N <= 2^24: all kinds of polynomials succeed; ||w1||/beta1 within a few percent of 1 for uniform f, below
+  for sparse/small8; const/blockrep/maxdig_eq close to uniform despite ||(z,e)||^2 up to 2x its expectation.
+- optimised, N = 2^28: maxdig (||s||^2 about 3x the uniform value) gives ||w1||/beta1 about 1.3 -> projection of level 1
+  fails 251 times (proof fails); const/blockrep/maxdig_eq (z = (sum c_i) s_1) give heavy tails of ||z|| -> frequent
+  retries and possibly failures.
+- guaranteed: every run succeeds, all fills <= 1 (well below), mean attempts <= 2 per projection / challenge vector.
