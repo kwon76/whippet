@@ -140,8 +140,13 @@ def one_run(job):
     rec['rss_commit_mb'] = rss_mb()
     rec['commitment_bytes'] = len(u)
     t0 = time.time()
+    plog = open(os.path.join(SCRATCH, "progress_%d_%s_%s_%d.log" % (logN, var, kind, rep)), "w")
+
+    def log(*a):
+        plog.write("%.0f %s\n" % (time.time() - t0, " ".join(str(x) for x in a)))
+        plog.flush()
     try:
-        y, proof, wr = pcs.open_(pp, st, x, log=lambda *a: None)
+        y, proof, wr = pcs.open_(pp, st, x, log=log)
     except RuntimeError as ex:
         rec['t_open'] = time.time() - t0
         rec['rss_open_mb'] = rss_mb()
