@@ -70,6 +70,13 @@ num["PctStrongQ"] = str(round(pct(W(30, "Q"), B(30, "Q", "linall"))))
 gp = [100.0 * (G(n)["total"] / W(n, "Q") - 1) for n in NS]
 num["GPctLo"], num["GPctHi"] = str(floor(min(gp))), str(ceil(max(gp)))
 num["BQcDec"] = f1(B(30, "Q") * 1.024)
+def _set(vals):
+    v = sorted(set(vals))
+    return "\\{" + ",".join(str(x) for x in v) + "\\}"
+fulls = [F["whip_gh%d_%s_%d_full" % (n, a_, k)] for n in NS for a_ in "CA" for k in (438, 483)]
+num["RhoTSet"], num["RhoUSet"] = _set(e["Dt"] for e in fulls), _set(e["Du"] for e in fulls)
+gcs = [F["whip_gh%d_A_483_gc" % n] for n in NS]
+num["RhoTSetGc"], num["RhoUSetGc"] = _set(e["Dt"] for e in gcs), _set(e["Du"] for e in gcs)
 # values of the model before the correction of the digit norm for b0^d0 < q (results_prev/final.json)
 FOLD = json.load(open(os.path.join(ROOT, "results_prev", "final.json")))
 oldtot = lambda k: FOLD[k]["total"] - (YPRIME if k.startswith("base_gh") else 0.0)
@@ -447,8 +454,7 @@ with open(os.path.join(OUT, "tab_e2e_levels.tex"), "w") as fh:
             r = ESUM[(nlv, var)]
             if i is None:
                 ks = r['kinds'].values()
-                cells += ["%.3f--%.3f" % (min(s['fill1_min'] for s in ks), max(s['fill1_max'] for s in ks)),
-                          "--", "%.2f / %d" % (r['first_fold_tries_mean'], r['first_fold_tries_max'])]
+                cells += ["", "--", "%.2f / %d" % (r['first_fold_tries_mean'], r['first_fold_tries_max'])]
             elif i < len(r['level_stats']) and r['level_stats'][i]:
                 l = r['level_stats'][i]
                 cells += ["%.3f--%.3f" % (l['fill_min'], l['fill_max']), "%.2f / %d" % (l['jl_mean'], l['jl_max']),

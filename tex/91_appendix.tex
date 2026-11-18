@@ -92,7 +92,7 @@ In the guaranteed setting of \cref{sec:completeness} the variances above are rep
 The recursion is found by a beam search of width $160$ over at most eight levels; a state is a pair $(m,\beta)$, and the options of a level are $r$ from a geometric grid, decomposition or not, committed or clear partial evaluations, and the budget for the inner low parts. LaBRADOR is modelled along the same lines with the formulas of~\cite[Section~5]{BS23}, including the garbage polynomials and their decomposition, and its recursion is optimised in the same way.
 
 \paragraph{First fold.}
-The witness of~\eqref{eq:gh-system} has $\delta_wr+\delta_tnr+2\delta_0m+2n_1+2n$ ring elements, where $\delta_w$ and $\delta_t$ are the numbers of digits of $\vw$ and of the inner commitments. In the conventional and proof-based settings the shape $(m,r,b_0,\delta_0,b_1)$ is that of~\cite[Table~4]{NS24}, and the norm bound is computed from the variances of the digits, of $\vz$ and of the low parts as above; the inner commitments drop $\varrho_t\in\{8,9\}$ bits, which removes one digit, and the outer ones $\varrho_u\in\{11,12\}$ bits. In the guaranteed setting $m$ and $r$ are kept, the polynomial is split into $\delta_0=\lceil32/\log_2b_0\rceil$ digits for $b_0\in\{8,16\}$, the commitments have digits in base $2^6$, $\varrho_t$ is the largest number with $rnd\,4^{\varrho_t-1}\le B_s^2/10$, and the norm bound is computed as in \cref{sec:completeness}; the model selected $b_0=16$ with $\varrho_t\in\{7,8\}$ and $\varrho_u\in\{10,11\}$.
+The witness of~\eqref{eq:gh-system} has $\delta_wr+\delta_tnr+2\delta_0m+2n_1+2n$ ring elements, where $\delta_w$ and $\delta_t$ are the numbers of digits of $\vw$ and of the inner commitments. In the conventional and proof-based settings the shape $(m,r,b_0,\delta_0,b_1)$ is that of~\cite[Table~4]{NS24}, and the norm bound is computed from the variances of the digits, of $\vz$ and of the low parts as above, where the last digit of a coefficient, the remaining quotient, is counted with its actual range (for $N=2^{26},2^{28}$ it is four times as wide as the others); the inner commitments drop $\varrho_t\in\nRhoTSet$ bits, which removes one digit, and the outer ones $\varrho_u\in\nRhoUSet$ bits. In the guaranteed setting $m$ and $r$ are kept, the polynomial is split into $\delta_0=\lceil32/\log_2b_0\rceil$ digits for $b_0\in\{8,16\}$, the commitments have digits in base $2^6$, $\varrho_t$ is the largest number with $rnd\,4^{\varrho_t-1}\le B_s^2/10$, and the norm bound is computed as in \cref{sec:completeness}; the model selected $b_0=16$ with $\varrho_t\in\nRhoTSetGc$ and $\varrho_u\in\nRhoUSetGc$.
 
 \section{Challenge Pairs for Proposition~\ref{prop:weak}}\label{app:pairs}
 
@@ -116,7 +116,7 @@ level & $\norm{\vw}/\beta$ & $\Pi$ & $c$ & $\norm{\vw}/B$ & $\Pi$ & $c$\\
 \input{gen/tab_e2e_levels.tex}
 \bottomrule
 \end{tabular}
-\caption{Runs of \cref{tab:e2e} for $N=\nEeNlv$: range of the norm of the witness of each level relative to its bound, and mean and maximum of the numbers of attempts for the projection ($\Pi$) and for the challenges ($c$); the row ``first fold'' gives the witness handed to the first level and the challenge vectors of the first fold.}
+\caption{Runs of \cref{tab:e2e} for $N=\nEeNlv$: range of the norm of the witness of each level relative to its bound, and mean and maximum of the numbers of attempts for the projection ($\Pi$) and for the challenges ($c$); the row ``first fold'' gives the challenge vectors of the first fold; its witness is that of level~$1$.}
 \label{tab:e2e-levels}
 \end{table}
 
