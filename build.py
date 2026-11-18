@@ -496,6 +496,12 @@ num["EeOkFillHi"] = "%.3f" % max(okfills)
 zes = [x['ff']['parts']['ze'] / x['ff']['model_parts']['ze'] for (n, var), r in ESUM.items() if var == "full"
        for runs in ES.groups(EDB)[(n, var)].values() for x in runs if 'parts' in x.get('ff', {})]
 num["EeZeMax"] = "%.1f" % max(zes)
+zc = [x['ff']['parts']['ze'] / x['ff']['model_parts']['ze'] for (n, var), r in ESUM.items() if var == "full"
+      for kind, runs in ES.groups(EDB)[(n, var)].items() if kind in ("const", "blockrep") for x in runs if 'parts' in x.get('ff', {})]
+num["EeZeConstMax"] = "%.1f" % max(zc)
+cfail = [f for f in fails if f[1] in ("const", "blockrep")]
+num["EeConstFailText"] = ("although none of their runs failed" if not cfail else
+                          "and %d of their runs failed as well" % len(cfail))
 # share of ||z1||^2 in beta_1^2 in the model of the first fold (optimised setting)
 sys.path.insert(0, os.path.join(ROOT, "model"))
 import gh as GH, params as PP, wmodel as WM                 # noqa: E402
